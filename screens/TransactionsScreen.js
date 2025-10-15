@@ -450,4 +450,3 @@ const styles = StyleSheet.create({
   logoContainer: { flexDirection: "row", alignItems: "center" },
   profileImage: { width: 50, height: 50, borderRadius: 20 },
 });
- 
