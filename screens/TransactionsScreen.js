@@ -213,6 +213,14 @@ export default function TransactionsScreen() {
                 >
                   <Text style={{ color: "#E53935", fontWeight: "bold" }}>Reset</Text>
                 </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={styles.cancelButton}
+                  onPress={() => setFilterModalVisible(false)}
+                >
+                  <Text style={{ color: "#555", fontWeight: "bold" }}>Cancel</Text>
+                </TouchableOpacity>
+
                 <TouchableOpacity
                   style={styles.applyButton}
                   onPress={() => setFilterModalVisible(false)}
@@ -341,7 +349,7 @@ const styles = StyleSheet.create({
     padding: 14,
     borderRadius: 10,
     alignItems: "center",
-    marginLeft: 10,
+    marginLeft: 5,
   },
   resetButton: {
     flex: 1,
@@ -351,6 +359,15 @@ const styles = StyleSheet.create({
     alignItems: "center",
     borderWidth: 1,
     borderColor: "#E53935",
+    marginRight: 5,
+  },
+  cancelButton: {
+    flex: 1,
+    backgroundColor: "#E0E0E0",
+    padding: 14,
+    borderRadius: 10,
+    alignItems: "center",
+    marginHorizontal: 5,
   },
   divider: { height: 1, backgroundColor: "#E0E0E0" },
 });

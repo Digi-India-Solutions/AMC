@@ -35,7 +35,6 @@ const fetchAMCs = async () => {
     const daysLeft = Math.floor((end - today) / (1000 * 60 * 60 * 24));
     let status = "Active";
     if (daysLeft < 0) status = "Expired";
-    else if (daysLeft <= 30) status = "Expiring Soon";
     return { ...item, status, daysLeft };
   });
 };
@@ -43,7 +42,6 @@ const fetchAMCs = async () => {
 // Helpers
 const statusColor = (status) => {
   if (status === "Active") return "#16a34a";
-  if (status === "Expiring Soon") return "#f59e0b";
   if (status === "Expired") return "#ef4444";
   return "#999";
 };
@@ -134,7 +132,7 @@ const AMCCard = ({ item, index }) => {
 const SummaryCard = ({ label, count, color, icon, index }) => {
   const anim = useRef(new Animated.Value(0)).current;
   useEffect(() => {
-    Animated.spring(anim, { toValue: 1, delay: index * 150, useNativeDriver: true }).start();
+    Animated.spring(anim, { toValue: 1, delay: index * 100, useNativeDriver: true }).start();
   }, []);
   const translateY = anim.interpolate({ inputRange: [0, 1], outputRange: [20, 0] });
   const opacity = anim;
@@ -199,7 +197,6 @@ export default function EmcManagementScreen() {
     () => ({
       total: amcs.length,
       active: amcs.filter((a) => a.status === "Active").length,
-      expiring: amcs.filter((a) => a.status === "Expiring Soon").length,
       expired: amcs.filter((a) => a.status === "Expired").length,
     }),
     [amcs]
@@ -231,8 +228,7 @@ export default function EmcManagementScreen() {
         <View style={styles.summaryContainer}>
           <SummaryCard label="Total AMCs" count={counts.total} color="#3b82f6" icon="documents-outline" index={0} />
           <SummaryCard label="Active" count={counts.active} color="#10b981" icon="checkmark-circle-outline" index={1} />
-          <SummaryCard label="Expiring Soon" count={counts.expiring} color="#f59e0b" icon="alarm-outline" index={2} />
-          <SummaryCard label="Expired" count={counts.expired} color="#ef4444" icon="close-circle-outline" index={3} />
+          <SummaryCard label="Expired" count={counts.expired} color="#ef4444" icon="close-circle-outline" index={2} />
         </View>
 
         {/* Filters */}
@@ -248,7 +244,7 @@ export default function EmcManagementScreen() {
           </View>
 
           <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginVertical: 8 }}>
-            {["All", "Active", "Expiring Soon", "Expired"].map((s) => (
+            {["All", "Active", "Expired"].map((s) => (
               <TouchableOpacity
                 key={s}
                 style={[styles.filterChip, { backgroundColor: statusFilter === s ? "#2563eb" : "#fff" }]}
@@ -309,7 +305,7 @@ const styles = StyleSheet.create({
   addBtn: { backgroundColor: "#2563eb", flexDirection: "row", paddingVertical: 8, paddingHorizontal: 12, borderRadius: 8, alignItems: "center" },
   addTxt: { color: "#fff", marginLeft: 6, fontWeight: "600" },
   summaryContainer: { flexDirection: "row", flexWrap: "wrap", justifyContent: "space-between" },
-  summaryCard: { backgroundColor: "#fff", borderRadius: 12, padding: 14, width: "47%", marginVertical: 6, elevation: 3 },
+  summaryCard: { backgroundColor: "#fff", borderRadius: 12, padding: 14, width: "31%", marginVertical: 6, elevation: 3 },
   cardIcon: { width: 42, height: 42, borderRadius: 8, justifyContent: "center", alignItems: "center" },
   cardLabel: { color: "#6B7280", marginTop: 6 },
   cardValue: { fontSize: 20, fontWeight: "700", marginTop: 4 },
