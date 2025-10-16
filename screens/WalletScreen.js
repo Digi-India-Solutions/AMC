@@ -9,9 +9,12 @@ import {
   ScrollView,
   Image,
   Animated,
+  FlatList,
 } from "react-native";
 import Icon from "react-native-vector-icons/Ionicons";
+import LinearGradient from "react-native-linear-gradient";
 import Drawer from "../components/uicomponents/Drawer";
+import Header from "../components/uicomponents/Header";
 
 const { width, height } = Dimensions.get("window");
 const makeScale = (value) => (value * width) / 375;
@@ -24,10 +27,15 @@ const dummyWallet = {
     { id: 1, name: "Rohit Raj", type: "User", email: "rohit@test.com", balance: 500, status: "Active" },
     { id: 2, name: "Priya Singh", type: "Vendor", email: "priya@test.com", balance: 1500, status: "Inactive" },
     { id: 3, name: "Amit Verma", type: "User", email: "amit@test.com", balance: 2000, status: "Active" },
+    { id: 4, name: "Deepak Singh", type: "User", email: "deepak@test.com", balance: 2000, status: "Active" },
+    { id: 5, name: "Rahul ", type: "Vendor", email: "rahul@test.com", balance: 5000, status: "Active" },
+    { id: 6, name: "Somya", type: "User", email: "somya@test.com", balance: 3000, status: "Inactive" },
   ],
   transactions: [
-    { id: 1, name: "Top-Up", type: "Credit", email: "2025-10-01", balance: 1000, status: "Success" },
-    { id: 2, name: "Purchase", type: "Debit", email: "2025-10-02", balance: 500, status: "Failed" },
+    { id: 1, name: "Wallet Top-Up", type: "credit", date: "2025-10-01", amount: 1000, icon: "wallet" },
+    { id: 2, name: "Purchase – Grocery", type: "debit", date: "2025-10-02", amount: 500, icon: "cart" },
+    { id: 3, name: "Refund – Order #2435", type: "credit", date: "2025-09-25", amount: 300, icon: "refresh" },
+    { id: 4, name: "Transfer – Bank", type: "debit", date: "2025-08-15", amount: 2000, icon: "arrow-forward" },
   ],
 };
 
@@ -36,7 +44,6 @@ export default function WalletManagement({ navigation }) {
   const [selectedTab, setSelectedTab] = useState("Wallet Balances");
   const [search, setSearch] = useState("");
   const fadeAnim = useRef(new Animated.Value(0)).current;
-  const [rowAnim, setRowAnim] = useState([]);
 
   const [showDrawer, setShowDrawer] = useState(false);
   const slideAnim = useRef(new Animated.Value(-width * 0.75)).current;
@@ -66,22 +73,7 @@ export default function WalletManagement({ navigation }) {
     }).start();
   }, []);
 
-  useEffect(() => {
-    const dataToShow = selectedTab === "Wallet Balances" ? wallet.users : wallet.transactions;
-    const anims = dataToShow.map(() => new Animated.Value(0));
-    setRowAnim(anims);
-
-    anims.forEach((anim, index) => {
-      Animated.timing(anim, {
-        toValue: 1,
-        duration: 500,
-        delay: index * 100,
-        useNativeDriver: true,
-      }).start();
-    });
-  }, [selectedTab, search]);
-
-  const renderCard = (title, value, color, icon) => (
+  const renderSummaryCard = (title, value, color, icon) => (
     <Animated.View
       style={[
         styles.card,
@@ -90,7 +82,10 @@ export default function WalletManagement({ navigation }) {
           opacity: fadeAnim,
           transform: [
             {
-              translateY: fadeAnim.interpolate({ inputRange: [0, 1], outputRange: [20, 0] }),
+              translateY: fadeAnim.interpolate({
+                inputRange: [0, 1],
+                outputRange: [20, 0],
+              }),
             },
           ],
         },
@@ -108,36 +103,84 @@ export default function WalletManagement({ navigation }) {
     </Animated.View>
   );
 
-  const dataToShow = selectedTab === "Wallet Balances" ? wallet.users : wallet.transactions;
-  const filteredData = dataToShow.filter((u) =>
-    u.name.toLowerCase().includes(search.toLowerCase())
-  );
+  const filteredData =
+    selectedTab === "Wallet Balances"
+      ? wallet.users.filter((u) =>
+          u.name.toLowerCase().includes(search.toLowerCase())
+        )
+      : wallet.transactions.filter((t) =>
+          t.name.toLowerCase().includes(search.toLowerCase())
+        );
+
+  const renderTransaction = ({ item, index }) => {
+    const anim = new Animated.Value(0);
+    Animated.timing(anim, {
+      toValue: 1,
+      duration: 400,
+      delay: index * 80,
+      useNativeDriver: true,
+    }).start();
+
+    const translateY = anim.interpolate({
+      inputRange: [0, 1],
+      outputRange: [15, 0],
+    });
+
+    return (
+      <Animated.View
+        style={[
+          styles.transactionCard,
+          { opacity: anim, transform: [{ translateY }] },
+        ]}
+      >
+        <View style={styles.transactionRow}>
+          <LinearGradient
+            colors={
+              item.type === "credit"
+                ? ["#81C784", "#388E3C"]
+                : ["#EF9A9A", "#C62828"]
+            }
+            style={styles.iconCircle}
+          >
+            <Icon name={item.icon} size={22} color="#fff" />
+          </LinearGradient>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.description}>{item.name}</Text>
+            <Text style={styles.date}>{item.date}</Text>
+          </View>
+          <Text
+            style={[
+              styles.amount,
+              { color: item.type === "credit" ? "#43A047" : "#E53935" },
+            ]}
+          >
+            {item.type === "credit" ? "+" : "-"}₹{item.amount}
+          </Text>
+        </View>
+      </Animated.View>
+    );
+  };
 
   return (
     <View style={{ flex: 1, backgroundColor: "#F8FAFC" }}>
-      <ScrollView style={styles.container} showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 100 }} >
-        {/* Header */}
-        <View style={styles.topHeader}>
-          <TouchableOpacity onPress={openDrawer}>
-            <Icon name="menu" size={28} color="#333" />
-          </TouchableOpacity>
-          <Image source={require("../assets/emicare.png")} style={{ height: 50, width: 150 }} />
-          <TouchableOpacity onPress={() => navigation.navigate("ProfileScreen")}>
-            <Image source={require("../assets/logo.png")} style={styles.profileImage} />
-          </TouchableOpacity>
-        </View>
+      <Header />
+      <View style={styles.divider} />
 
+      <ScrollView
+        style={styles.container}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: 100 }}
+      >
         <Text style={styles.header}>Wallet Management</Text>
 
         {/* Summary Cards */}
         <View style={styles.cardContainer}>
-          {renderCard("Total Balance", wallet.totalBalance, "#00C853", "wallet")}
-          {renderCard("Total Credits", wallet.totalCredits, "#2979FF", "arrow-up-circle")}
+          {renderSummaryCard("Total Balance", wallet.totalBalance, "#00C853", "wallet")}
+          {renderSummaryCard("Total Credits", wallet.totalCredits, "#2979FF", "arrow-up-circle")}
         </View>
         <View style={styles.cardContainer}>
-          {renderCard("Total Debits", wallet.totalDebits, "#D50000", "arrow-down-circle")}
-          {renderCard("Transactions", wallet.transactions.length, "#FFA000", "receipt")}
+          {renderSummaryCard("Total Debits", wallet.totalDebits, "#D50000", "arrow-down-circle")}
+          {renderSummaryCard("Transactions", wallet.transactions.length, "#FFA000", "receipt")}
         </View>
 
         {/* Tabs */}
@@ -149,7 +192,7 @@ export default function WalletManagement({ navigation }) {
               style={[styles.tab, selectedTab === tab && styles.activeTab]}
             >
               <Text style={[styles.tabText, selectedTab === tab && styles.activeTabText]}>
-                {tab} ({tab === "Wallet Balances" ? wallet.users.length : wallet.transactions.length})
+                {tab}
               </Text>
             </TouchableOpacity>
           ))}
@@ -160,74 +203,93 @@ export default function WalletManagement({ navigation }) {
           <Icon name="search" size={18} color="#777" style={{ marginRight: 6 }} />
           <TextInput
             style={styles.searchInput}
-            placeholder="Search users or transactions..."
+            placeholder="Search..."
             value={search}
             onChangeText={setSearch}
             placeholderTextColor="#999"
           />
         </View>
 
-        {/* Box Cards instead of table */}
-        <View style={{ paddingBottom: 20 }}>
-          {filteredData.length > 0 ? filteredData.map((item, index) => {
-            if (!rowAnim[index]) return null;
+       {selectedTab === "Wallet Balances" ? (
+  filteredData.length > 0 ? (
+    <FlatList
+      data={filteredData}
+      keyExtractor={(item) => item.id.toString()}
+      renderItem={({ item, index }) => {
+        const anim = new Animated.Value(0);
+        Animated.timing(anim, {
+          toValue: 1,
+          duration: 400,
+          delay: index * 80,
+          useNativeDriver: true,
+        }).start();
 
-            const backgroundColor =
-              item.status === "Active" || item.status === "Success"
-                ? "#E8F5E9"
-                : item.status === "Inactive" || item.status === "Failed"
-                  ? "#FFEBEE"
-                  : "#fff";
+        const translateY = anim.interpolate({
+          inputRange: [0, 1],
+          outputRange: [15, 0],
+        });
 
-            return (
-              <View key={item.id} style={{ marginBottom: 10 }}>
-                <Animated.View
-                  style={[
-                    styles.boxCard,
-                    {
-                      opacity: rowAnim[index],
-                      transform: [{ translateY: rowAnim[index].interpolate({ inputRange: [0, 1], outputRange: [15, 0] }) }],
-                      backgroundColor,
-                    },
-                  ]}
-                >
-                  <View style={styles.boxRow}>
-                    <View style={{ flex: 1 }}>
-                      <Text style={styles.boxName}>{item.name}</Text>
-                      <Text style={styles.boxType}>{item.type}</Text>
-                      <Text style={styles.boxEmail}>{item.email}</Text>
-                    </View>
-                    <View style={{ alignItems: "flex-end" }}>
-                      <Text style={styles.boxBalance}>₹{item.balance}</Text>
-                      <Text style={[styles.boxStatus, { color: item.status === "Active" || item.status === "Success" ? "#00C853" : "#D32F2F" }]}>
-                        {item.status}
-                      </Text>
-                      <TouchableOpacity style={styles.moreBtn}>
-                        <Icon name="ellipsis-vertical" size={18} color="#555" />
-                      </TouchableOpacity>
-                    </View>
-                  </View>
-                </Animated.View>
-              </View>
-            );
-          }) : (
-            <Text style={{ textAlign: "center", marginTop: 20, color: "#999" }}>No records found.</Text>
-          )}
-        </View>
+        return (
+          <Animated.View
+            style={[
+              styles.userTransactionCard,
+              { opacity: anim, transform: [{ translateY }] },
+            ]}
+          >
+            <LinearGradient
+              colors={["#42A5F5", "#1E88E5"]}
+              style={styles.userIconCircle}
+            >
+              <Icon
+                name={item.type === "User" ? "person" : "business"}
+                size={22}
+                color="#fff"
+              />
+            </LinearGradient>
+            <View style={{ flex: 1, marginLeft: 10 }}>
+              <Text style={styles.description}>{item.name}</Text>
+              <Text style={styles.date}>{item.type} • {item.email}</Text>
+            </View>
+            <View style={{ alignItems: "flex-end" }}>
+              <Text style={[styles.amount, { color: "#1E88E5" }]}>
+                ₹{item.balance.toLocaleString()}
+              </Text>
+              <Text
+                style={{
+                  marginTop: 4,
+                  color: item.status === "Active" ? "#00C853" : "#D32F2F",
+                  fontWeight: "600",
+                  fontSize: 12,
+                }}
+              >
+                {item.status}
+              </Text>
+            </View>
+          </Animated.View>
+        );
+      }}
+      showsVerticalScrollIndicator={false}
+    />
+  ) : (
+    <Text style={styles.noData}>No users found.</Text>
+  )
+) : (
+  <FlatList
+    data={filteredData}
+    keyExtractor={(item) => item.id.toString()}
+    renderItem={renderTransaction}
+    showsVerticalScrollIndicator={false}
+  />
+)}
+
       </ScrollView>
 
-      {/* Full-screen Drawer */}
+      {/* Drawer */}
       {showDrawer && (
         <>
-          <TouchableOpacity
-            style={styles.overlay}
-            activeOpacity={1}
-            onPress={closeDrawer}
-          />
-          <Animated.View
-            style={[styles.drawer, { transform: [{ translateX: slideAnim }] }]}
-          >
-            <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
+          <TouchableOpacity style={styles.overlay} onPress={closeDrawer} />
+          <Animated.View style={[styles.drawer, { transform: [{ translateX: slideAnim }] }]}>
+            <ScrollView>
               <Drawer />
             </ScrollView>
           </Animated.View>
@@ -239,8 +301,7 @@ export default function WalletManagement({ navigation }) {
 
 const styles = StyleSheet.create({
   container: { flex: 1, padding: makeScale(10) },
-  topHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 10 },
-  profileImage: { width: 50, height: 50, borderRadius: 20 },
+  divider: { height: 1, backgroundColor: "#E0E0E0" },
   header: { fontSize: makeScale(22), fontWeight: "700", color: "#1A1A1A", marginBottom: 12 },
 
   cardContainer: { flexDirection: "row", justifyContent: "space-between", marginBottom: 10 },
@@ -259,16 +320,59 @@ const styles = StyleSheet.create({
   searchContainer: { flexDirection: "row", alignItems: "center", backgroundColor: "#fff", borderRadius: 8, paddingHorizontal: 10, marginBottom: 15, borderWidth: 1, borderColor: "#ddd", elevation: 1 },
   searchInput: { flex: 1, fontSize: 14, color: "#000" },
 
-  // Box/Card styles
-  boxCard: { borderRadius: 12, padding: 15, elevation: 2 },
-  boxRow: { flexDirection: "row", justifyContent: "space-between" },
+  // Transaction styling (similar to TransactionScreen)
+  transactionCard: {
+    backgroundColor: "#fff",
+    padding: 16,
+    borderRadius: 14,
+    marginBottom: 12,
+    elevation: 3,
+    shadowColor: "#000",
+    shadowOpacity: 0.08,
+    shadowRadius: 3,
+  },
+  transactionRow: { flexDirection: "row", alignItems: "center" },
+  iconCircle: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    marginRight: 10,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  description: { fontSize: 15, fontWeight: "600", color: "#222" },
+  date: { fontSize: 12, color: "#888", marginTop: 2 },
+  amount: { fontSize: 15, fontWeight: "bold" },
+
+  // Wallet Balances style
+  userCard: { backgroundColor: "#fff", borderRadius: 12, padding: 15, elevation: 2, marginBottom: 10 },
   boxName: { fontSize: 16, fontWeight: "700" },
   boxType: { fontSize: 13, color: "#555", marginTop: 2 },
   boxEmail: { fontSize: 12, color: "#777", marginTop: 2 },
-  boxBalance: { fontSize: 16, fontWeight: "700", textAlign: "right" },
+  boxBalance: { fontSize: 16, fontWeight: "700", marginTop: 8 },
   boxStatus: { fontSize: 13, fontWeight: "600", marginTop: 4 },
-  moreBtn: { marginTop: 8 },
+  noData: { textAlign: "center", marginTop: 20, color: "#999" },
 
   overlay: { ...StyleSheet.absoluteFillObject, backgroundColor: "rgba(0,0,0,0.3)", zIndex: 998 },
   drawer: { position: "absolute", top: 0, left: 0, width: width * 0.75, height, backgroundColor: "#fff", zIndex: 999, elevation: 10 },
-});
+  userTransactionCard: {
+  backgroundColor: "#fff",
+  padding: 16,
+  borderRadius: 14,
+  marginBottom: 12,
+  elevation: 3,
+  flexDirection: "row",
+  alignItems: "center",
+  shadowColor: "#000",
+  shadowOpacity: 0.08,
+  shadowRadius: 3,
+},
+userIconCircle: {
+  width: 40,
+  height: 40,
+  borderRadius: 20,
+  justifyContent: "center",
+  alignItems: "center",
+},
+}); 
+  

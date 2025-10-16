@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useState } from "react";
 import {
   View,
   Text,
@@ -7,19 +7,13 @@ import {
   StyleSheet,
   Modal,
   TextInput,
-  Animated,
   Platform,
-  Image,
-  Dimensions,
-  ScrollView
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import Icon from "react-native-vector-icons/Ionicons";
 import LinearGradient from "react-native-linear-gradient";
-import Drawer from '../components/uicomponents/Drawer'
-
-const { width, height } = Dimensions.get("window");
+import Header from "../components/uicomponents/Header";
 
 const transactionsData = {
   amc: [
@@ -38,7 +32,7 @@ const transactionsData = {
   ],
 };
 
-export default function TransactionsScreen({ navigation }) {
+export default function TransactionsScreen() {
   const [activeTab, setActiveTab] = useState("amc");
   const [searchText, setSearchText] = useState("");
   const [filterModalVisible, setFilterModalVisible] = useState(false);
@@ -47,26 +41,6 @@ export default function TransactionsScreen({ navigation }) {
   const [endDate, setEndDate] = useState(null);
   const [showStartPicker, setShowStartPicker] = useState(false);
   const [showEndPicker, setShowEndPicker] = useState(false);
-
-  const [showDrawer, setShowDrawer] = useState(false);
-  const slideAnim = useRef(new Animated.Value(-width * 0.75)).current;
-
-  const openDrawer = () => {
-    setShowDrawer(true);
-    Animated.timing(slideAnim, {
-      toValue: 0,
-      duration: 300,
-      useNativeDriver: true,
-    }).start();
-  };
-
-  const closeDrawer = () => {
-    Animated.timing(slideAnim, {
-      toValue: -width * 0.75,
-      duration: 250,
-      useNativeDriver: true,
-    }).start(() => setShowDrawer(false));
-  };
 
   const filteredData = transactionsData[activeTab].filter((item) => {
     const matchSearch = item.description.toLowerCase().includes((searchText || "").toLowerCase());
@@ -79,60 +53,38 @@ export default function TransactionsScreen({ navigation }) {
     return matchSearch && matchType && matchStart && matchEnd;
   });
 
-  const renderTransaction = ({ item, index }) => {
-    const animation = new Animated.Value(0);
-    Animated.timing(animation, {
-      toValue: 1,
-      duration: 400,
-      delay: index * 80,
-      useNativeDriver: true,
-    }).start();
-
-    const translateY = animation.interpolate({ inputRange: [0, 1], outputRange: [20, 0] });
-    const opacity = animation;
-
-    return (
-      <Animated.View style={[styles.transactionCard, { opacity, transform: [{ translateY }] }]}>
-        <View style={styles.transactionRow}>
-          <LinearGradient
-            colors={item.type === "credit" ? ["#81C784", "#388E3C"] : ["#EF9A9A", "#C62828"]}
-            style={styles.iconCircle}
-          >
-            <Icon name={item.icon} size={22} color="#fff" />
-          </LinearGradient>
-          <View style={{ flex: 1 }}>
-            <Text style={styles.description}>{item.description}</Text>
-            <Text style={styles.date}>{item.date}</Text>
-          </View>
-          <Text
-            style={[
-              styles.amount,
-              { color: item.type === "credit" ? "#43A047" : "#E53935" },
-            ]}
-          >
-            {item.type === "credit" ? "+" : "-"}₹{item.amount}
-          </Text>
-          <TouchableOpacity style={{ marginLeft: 12 }}>
-            <Icon name="share-outline" size={22} color="#555" />
-          </TouchableOpacity>
+  const renderTransaction = ({ item }) => (
+    <View style={styles.transactionCard}>
+      <View style={styles.transactionRow}>
+        <LinearGradient
+          colors={item.type === "credit" ? ["#81C784", "#388E3C"] : ["#EF9A9A", "#C62828"]}
+          style={styles.iconCircle}
+        >
+          <Icon name={item.icon} size={22} color="#fff" />
+        </LinearGradient>
+        <View style={{ flex: 1 }}>
+          <Text style={styles.description}>{item.description}</Text>
+          <Text style={styles.date}>{item.date}</Text>
         </View>
-      </Animated.View>
-    );
-  };
+        <Text
+          style={[
+            styles.amount,
+            { color: item.type === "credit" ? "#43A047" : "#E53935" },
+          ]}
+        >
+          {item.type === "credit" ? "+" : "-"}₹{item.amount}
+        </Text>
+        <TouchableOpacity style={{ marginLeft: 12 }}>
+          <Icon name="share-outline" size={22} color="#555" />
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
 
   return (
     <SafeAreaView style={styles.safeContainer}>
-      <View style={styles.topHeader}>
-        <TouchableOpacity onPress={openDrawer}>
-          <Icon name="menu" size={28} color="#333" />
-        </TouchableOpacity>
-        <View style={styles.logoContainer}>
-          <Image source={require("../assets/emicare.png")} style={{ height: 50, width: 150 }} />
-        </View>
-        <TouchableOpacity onPress={() => navigation.navigate("ProfileScreen")}>
-          <Image source={require("../assets/logo.png")} style={styles.profileImage} />
-        </TouchableOpacity>
-      </View>
+      <Header />
+      <View style={styles.divider} />
 
       <View style={styles.innerContainer}>
         {/* Tabs */}
@@ -143,9 +95,7 @@ export default function TransactionsScreen({ navigation }) {
               style={[styles.tabButton, activeTab === tab && styles.activeTab]}
               onPress={() => setActiveTab(tab)}
             >
-              <Text
-                style={[styles.tabText, activeTab === tab && styles.activeTabText]}
-              >
+              <Text style={[styles.tabText, activeTab === tab && styles.activeTabText]}>
                 {tab.toUpperCase()}
               </Text>
             </TouchableOpacity>
@@ -190,7 +140,6 @@ export default function TransactionsScreen({ navigation }) {
             <View style={styles.modalContent}>
               <Text style={styles.modalTitle}>Apply Filters</Text>
 
-              {/* Transaction Type */}
               <Text style={styles.sectionTitle}>Transaction Type</Text>
               <View style={styles.typeButtonContainer}>
                 {["all", "credit", "debit"].map((type) => (
@@ -214,7 +163,6 @@ export default function TransactionsScreen({ navigation }) {
                 ))}
               </View>
 
-              {/* Date Range */}
               <Text style={styles.sectionTitle}>Date Range</Text>
               <View style={styles.dateContainer}>
                 <TouchableOpacity
@@ -276,47 +224,11 @@ export default function TransactionsScreen({ navigation }) {
           </View>
         </Modal>
       </View>
-
-      {/* Full-screen Drawer */}
-      {showDrawer && (
-        <>
-          <TouchableOpacity
-            style={{
-              position: "absolute",
-              top: 0,
-              left: 0,
-              width,
-              height,
-              backgroundColor: "rgba(0,0,0,0.3)",
-              zIndex: 998,
-            }}
-            activeOpacity={1}
-            onPress={closeDrawer}
-          />
-          <Animated.View
-            style={{
-              position: "absolute",
-              top: 0,
-              left: 0,
-              width: width * 0.75,
-              height,
-              backgroundColor: "#fff",
-              transform: [{ translateX: slideAnim }],
-              zIndex: 999,
-              elevation: 10,
-              paddingTop: 0,
-            }}
-          >
-            <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
-              <Drawer />
-            </ScrollView>
-          </Animated.View>
-        </>
-      )}
     </SafeAreaView>
   );
 }
 
+/* ========== Styles ========== */
 const styles = StyleSheet.create({
   safeContainer: { flex: 1, backgroundColor: "#F4F6FB" },
   innerContainer: { flex: 1, paddingHorizontal: 16, paddingTop: 10 },
@@ -329,13 +241,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 4,
     borderRadius: 10,
   },
-  activeTab: {
-    backgroundColor: "#4CAF50",
-    shadowColor: "#000",
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 4,
-  },
+  activeTab: { backgroundColor: "#4CAF50", elevation: 4 },
   tabText: { fontWeight: "bold", color: "#555" },
   activeTabText: { color: "#fff" },
   searchBox: {
@@ -446,7 +352,5 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#E53935",
   },
-  topHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 5, padding: 5 },
-  logoContainer: { flexDirection: "row", alignItems: "center" },
-  profileImage: { width: 50, height: 50, borderRadius: 20 },
+  divider: { height: 1, backgroundColor: "#E0E0E0" },
 });
