@@ -45,8 +45,8 @@ export default function HomeScreen() {
         { name: "Others", population: 8, color: "#A66DD4" },
       ],
       recentActivity: [
-        { icon: "add-circle", text: "New AMC created for Samsung AC", time: "2 hours ago" },
-        { icon: "checkmark-done", text: "AMC renewal completed", time: "4 hours ago" },
+        { icon: "add-circle", text: "New WEC created for Samsung AC", time: "2 hours ago" },
+        { icon: "checkmark-done", text: "WEC renewal completed", time: "4 hours ago" },
         { icon: "wallet", text: "Commission credited to wallet", time: "6 hours ago" },
         { icon: "person-add", text: "New retailer registered", time: "1 day ago" },
       ],
@@ -104,7 +104,7 @@ export default function HomeScreen() {
         {/* Stats */}
         <View style={styles.statsRow}>
           <StatCard
-            title="Total AMCs"
+            title="Total WECs"
             value={stats.totalAMCs}
             growth={growth.amcs}
             icon="documents-outline"
@@ -134,7 +134,7 @@ export default function HomeScreen() {
         </View>
 
         {/* Charts */}
-        <ChartCard title="AMC Sales Trend">
+        <ChartCard title="WEC Sales Trend">
           <LineChart
             data={lineData}
             width={width - 40}
@@ -156,7 +156,7 @@ export default function HomeScreen() {
           />
         </ChartCard>
 
-        <ChartCard title="AMC Distribution by Product Category">
+        <ChartCard title="WEC Distribution by Product Category">
           <PieChart
             data={pieData.map((item) => ({
               ...item,

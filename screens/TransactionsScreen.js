@@ -17,11 +17,11 @@ import Header from "../components/uicomponents/Header";
 
 const transactionsData = {
   amc: [
-    { id: "1", description: "AMC – Premium Plan", amount: 1200, date: "2025-10-01", type: "debit", icon: "card" },
-    { id: "2", description: "AMC – Basic Plan", amount: 700, date: "2025-08-15", type: "debit", icon: "card" },
-    { id: "3", description: "AMC – Family Plan", amount: 2500, date: "2025-05-10", type: "debit", icon: "card" },
-    { id: "4", description: "AMC – Student Plan", amount: 500, date: "2025-07-20", type: "debit", icon: "card" },
-    { id: "5", description: "AMC – Senior Citizen Plan", amount: 800, date: "2025-09-10", type: "debit", icon: "card" },
+    { id: "1", description: "WEC – Premium Plan", amount: 1200, date: "2025-10-01", type: "debit", icon: "card" },
+    { id: "2", description: "WEC – Basic Plan", amount: 700, date: "2025-08-15", type: "debit", icon: "card" },
+    { id: "3", description: "WEC – Family Plan", amount: 2500, date: "2025-05-10", type: "debit", icon: "card" },
+    { id: "4", description: "WEC – Student Plan", amount: 500, date: "2025-07-20", type: "debit", icon: "card" },
+    { id: "5", description: "WEC – Senior Citizen Plan", amount: 800, date: "2025-09-10", type: "debit", icon: "card" },
   ],
   wallet: [
     { id: "1", description: "Wallet Recharge – Paytm", amount: 1000, date: "2025-10-10", type: "credit", icon: "wallet" },

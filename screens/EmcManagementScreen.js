@@ -11,6 +11,8 @@ import {
   Animated,
   Dimensions,
   Pressable,
+  StatusBar,
+  Platform,
 } from "react-native";
 import Icon from "react-native-vector-icons/Ionicons";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -24,9 +26,9 @@ const { width, height } = Dimensions.get("window");
 const fetchAMCs = async () => {
   await new Promise((r) => setTimeout(r, 500));
   const data = [
-    { id: "AMC001", customer: "Rohit Rajput", category: "AC", brand: "Voltas", model: "123V DZU", amount: 2500, startDate: "2024-01-15", endDate: "2025-01-15" },
-    { id: "AMC002", customer: "Priya Sharma", category: "Refrigerator", brand: "LG", model: "GL-T292RPZY", amount: 2880, startDate: "2023-10-01", endDate: "2024-09-30" },
-    { id: "AMC003", customer: "Amit Verma", category: "Laptop", brand: "Dell", model: "Inspiron 15", amount: 4200, startDate: "2022-01-01", endDate: "2023-12-31" },
+    { id: "WEC001", customer: "Rohit Rajput", category: "AC", brand: "Voltas", model: "123V DZU", amount: 2500, startDate: "2024-01-15", endDate: "2025-01-15" },
+    { id: "WEC002", customer: "Priya Sharma", category: "Refrigerator", brand: "LG", model: "GL-T292RPZY", amount: 2880, startDate: "2023-10-01", endDate: "2024-09-30" },
+    { id: "WEC003", customer: "Amit Verma", category: "Laptop", brand: "Dell", model: "Inspiron 15", amount: 4200, startDate: "2022-01-01", endDate: "2023-12-31" },
   ];
 
   const today = new Date();
@@ -206,27 +208,32 @@ export default function EmcManagementScreen() {
     return (
       <SafeAreaView style={styles.center}>
         <ActivityIndicator size="large" color="#2563eb" />
-        <Text>Loading AMC Data...</Text>
+        <Text>Loading WEC Data...</Text>
       </SafeAreaView>
     );
 
   return (
-    <SafeAreaView style={styles.safeContainer}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: "#f5f6fa" }}>
+      <StatusBar barStyle="dark-content" backgroundColor="#f5f6fa" />
       <Header />
       <View style={styles.divider} />
 
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ padding: 12, paddingBottom: 100 }}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingHorizontal: 12, paddingBottom: 100 }}
+        style={{ flex: 1 }}
+      >
         <View style={styles.headerRow}>
-          <Text style={styles.title}>AMC Management</Text>
+          <Text style={styles.title}>WEC Management</Text>
           <TouchableOpacity style={styles.addBtn} onPress={() => navigation.navigate("CreateAmcScreen")}>
             <Icon name="add" color="#fff" size={18} />
-            <Text style={styles.addTxt}>Create AMC</Text>
+            <Text style={styles.addTxt}>Create WEC</Text>
           </TouchableOpacity>
         </View>
 
         {/* Summary Cards */}
         <View style={styles.summaryContainer}>
-          <SummaryCard label="Total AMCs" count={counts.total} color="#3b82f6" icon="documents-outline" index={0} />
+          <SummaryCard label="Total WECs" count={counts.total} color="#3b82f6" icon="documents-outline" index={0} />
           <SummaryCard label="Active" count={counts.active} color="#10b981" icon="checkmark-circle-outline" index={1} />
           <SummaryCard label="Expired" count={counts.expired} color="#ef4444" icon="close-circle-outline" index={2} />
         </View>
@@ -236,7 +243,7 @@ export default function EmcManagementScreen() {
           <View style={styles.searchBox}>
             <Icon name="search-outline" size={18} color="#777" />
             <TextInput
-              placeholder="Search by name or AMC ID"
+              placeholder="Search by name or WEC ID"
               style={styles.input}
               value={query}
               onChangeText={setQuery}
@@ -272,7 +279,7 @@ export default function EmcManagementScreen() {
         {filtered.length > 0 ? (
           filtered.map((item, i) => <AMCCard key={i} item={item} index={i} />)
         ) : (
-          <Text style={styles.empty}>No AMC found</Text>
+          <Text style={styles.empty}>No WEC found</Text>
         )}
       </ScrollView>
 
@@ -298,7 +305,11 @@ export default function EmcManagementScreen() {
 }
 
 const styles = StyleSheet.create({
-  safeContainer: { flex: 1, backgroundColor: "#f5f6fa" },
+  safeContainer: {
+    flex: 1,
+    backgroundColor: "#f5f6fa",
+    paddingTop: Platform.OS === "android" ? StatusBar.currentHeight : 0,
+  },
   center: { flex: 1, justifyContent: "center", alignItems: "center" },
   headerRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginVertical: 10 },
   title: { fontSize: 22, fontWeight: "700", color: "#111" },

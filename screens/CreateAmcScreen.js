@@ -57,7 +57,7 @@ export default function CreateAmcScreen() {
       Alert.alert("Validation", "Please fill all required fields");
       return;
     }
-    Alert.alert("AMC Created", "Your AMC has been successfully created.");
+    Alert.alert("WEC Created", "Your WEC has been successfully created.");
     navigation.goBack();
   };
 
@@ -69,7 +69,7 @@ export default function CreateAmcScreen() {
           <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
             <Icon name="arrow-back" size={24} color="#000" />
           </TouchableOpacity>
-          <Text style={styles.header}>Create New AMC</Text>
+          <Text style={styles.header}>Create New WEC</Text>
         </View>
 
         {/* Customer Information */}
@@ -218,7 +218,7 @@ export default function CreateAmcScreen() {
             <Text style={styles.buttonText}>Cancel</Text>
           </TouchableOpacity>
           <TouchableOpacity style={[styles.button, styles.createButton]} onPress={handleSubmit}>
-            <Text style={[styles.buttonText, { color: "#fff" }]}>Create AMC</Text>
+            <Text style={[styles.buttonText, { color: "#fff" }]}>Create WEC</Text>
           </TouchableOpacity>
         </View>
       </View>

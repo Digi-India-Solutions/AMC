@@ -10,6 +10,8 @@ import {
   Image,
   Animated,
   FlatList,
+  SafeAreaView,
+  StatusBar,
 } from "react-native";
 import Icon from "react-native-vector-icons/Ionicons";
 import LinearGradient from "react-native-linear-gradient";
@@ -162,8 +164,9 @@ export default function WalletManagement({ navigation }) {
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor: "#F8FAFC" }}>
-      <Header />
+    <SafeAreaView style={{ flex: 1, backgroundColor: "#F8FAFC" }}>
+      <StatusBar barStyle="dark-content" backgroundColor="#F8FAFC" />
+      <Header />  {/* Make sure Header has no top margin/padding */}
       <View style={styles.divider} />
 
       <ScrollView
@@ -295,7 +298,7 @@ export default function WalletManagement({ navigation }) {
           </Animated.View>
         </>
       )}
-    </View>
+    </SafeAreaView> 
   );
 }
 
