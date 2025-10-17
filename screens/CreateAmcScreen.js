@@ -7,7 +7,7 @@ import {
   TouchableOpacity,
   ScrollView,
   Alert,
-  Platform,
+  Image,
 } from "react-native";
 import { Picker } from "@react-native-picker/picker";
 import { useNavigation } from "@react-navigation/native";
@@ -20,20 +20,6 @@ const makeScale = (v) => (v * width) / 375;
 export default function CreateAmcScreen() {
   const navigation = useNavigation();
 
-
-  const pickFile = () => {
-    launchImageLibrary(
-      { mediaType: "mixed", includeBase64: false },
-      (response) => {
-        if (!response.didCancel && !response.errorCode) {
-          const file = response.assets[0];
-          setForm({ ...form, proof: { name: file.fileName, uri: file.uri, type: file.type } });
-        }
-      }
-    );
-  };
-
-
   const [form, setForm] = useState({
     name: "",
     email: "",
@@ -45,7 +31,8 @@ export default function CreateAmcScreen() {
     type: "",
     model: "",
     purchaseValue: "",
-    proof: null,
+    billProof: null,
+    productPhotos: [],
   });
 
   const [finalAmount, setFinalAmount] = useState(0);
@@ -54,43 +41,72 @@ export default function CreateAmcScreen() {
     setForm({ ...form, [key]: value });
   };
 
-  <TouchableOpacity style={styles.fileButton} onPress={pickFile}>
-    <Text style={styles.fileText}>
-      {form.proof ? form.proof.name : "Choose File"}
-    </Text>
-  </TouchableOpacity>
-
-
-  const openGallery = () => {
-    launchImageLibrary(
-      { mediaType: "mixed", includeBase64: false },
-      (response) => {
-        if (!response.didCancel && !response.errorCode) {
-          const file = response.assets[0];
-          setForm({ ...form, proof: { name: file.fileName, uri: file.uri, type: file.type } });
-        }
+  // ---- Pick Bill (Single Image from gallery) ----
+  const pickBill = () => {
+    launchImageLibrary({ mediaType: "photo" }, (response) => {
+      if (!response.didCancel && !response.errorCode) {
+        const file = response.assets[0];
+        setForm({
+          ...form,
+          billProof: { name: file.fileName, uri: file.uri, type: file.type },
+        });
       }
-    );
+    });
   };
 
-  const openCamera = () => {
-    launchCamera(
-      { mediaType: "photo", includeBase64: false },
-      (response) => {
-        if (!response.didCancel && !response.errorCode) {
-          const file = response.assets[0];
-          setForm({ ...form, proof: { name: file.fileName, uri: file.uri, type: file.type } });
-        }
-      }
-    );
+  // ---- Pick Product Photos (Multiple images with choice) ----
+  const pickProductPhotos = () => {
+    Alert.alert("Upload Product Photos", "Choose source", [
+      {
+        text: "Camera",
+        onPress: () => {
+          launchCamera({ mediaType: "photo" }, (response) => {
+            if (!response.didCancel && !response.errorCode) {
+              const file = response.assets[0];
+              setForm((prev) => ({
+                ...prev,
+                productPhotos: [
+                  ...prev.productPhotos,
+                  { name: file.fileName, uri: file.uri, type: file.type },
+                ],
+              }));
+            }
+          });
+        },
+      },
+      {
+        text: "Gallery",
+        onPress: () => {
+          launchImageLibrary(
+            { mediaType: "photo", selectionLimit: 5 },
+            (response) => {
+              if (!response.didCancel && !response.errorCode) {
+                const files = response.assets.map((f) => ({
+                  name: f.fileName,
+                  uri: f.uri,
+                  type: f.type,
+                }));
+                setForm((prev) => ({
+                  ...prev,
+                  productPhotos: [...prev.productPhotos, ...files],
+                }));
+              }
+            }
+          );
+        },
+      },
+      { text: "Cancel", style: "cancel" },
+    ]);
   };
 
+  // ---- Auto GST Calculation ----
   useEffect(() => {
     const value = parseFloat(form.purchaseValue) || 0;
     const tax = value * 0.18;
     setFinalAmount(value + tax);
   }, [form.purchaseValue]);
 
+  // ---- Submit ----
   const handleSubmit = () => {
     if (!form.name || !form.email || !form.mobile || !form.address) {
       Alert.alert("Validation", "Please fill all required fields");
@@ -102,16 +118,22 @@ export default function CreateAmcScreen() {
 
   return (
     <View style={{ flex: 1 }}>
-      <ScrollView style={styles.container} contentContainerStyle={{ padding: makeScale(15) }}>
-
+      <ScrollView
+        style={styles.container}
+        contentContainerStyle={{ padding: makeScale(15) }}
+      >
+        {/* Header */}
         <View style={styles.headerRow}>
-          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+          <TouchableOpacity
+            onPress={() => navigation.goBack()}
+            style={styles.backButton}
+          >
             <Icon name="arrow-back" size={24} color="#000" />
           </TouchableOpacity>
           <Text style={styles.header}>Create New WEC</Text>
         </View>
 
-
+        {/* Customer Info */}
         <Text style={styles.sectionTitle}>Customer Information</Text>
         <View style={styles.row}>
           <View style={styles.inputGroup}>
@@ -158,6 +180,7 @@ export default function CreateAmcScreen() {
           </View>
         </View>
 
+        {/* Upload Bill */}
         <View style={styles.row}>
           <View style={styles.inputGroup}>
             <Text style={styles.label}>Serial / IMEI Number *</Text>
@@ -169,16 +192,49 @@ export default function CreateAmcScreen() {
             />
           </View>
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>Upload File / Photo</Text>
-            <TouchableOpacity style={styles.fileButton} onPress={pickFile}>
+            <Text style={styles.label}>Upload Bill</Text>
+            <TouchableOpacity style={styles.fileButton} onPress={pickBill}>
               <Text style={styles.fileText}>
-                {form.proof ? form.proof.name : "Choose File / Photo"}
+                {form.billProof ? form.billProof.name : "Choose Bill"}
               </Text>
             </TouchableOpacity>
           </View>
         </View>
 
+        {/* Upload Product Photos */}
+        <View style={styles.inputGroup}>
+          <Text style={styles.label}>Upload Product Photos</Text>
+          <TouchableOpacity style={styles.fileButton} onPress={pickProductPhotos}>
+            <Text style={styles.fileText}>Choose Products...</Text>
+          </TouchableOpacity>
 
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            style={{ marginTop: 10 }}
+          >
+            {form.productPhotos.map((img, idx) => (
+              <View key={idx} style={styles.photoWrapper}>
+                <Image
+                  source={{ uri: img.uri }}
+                  style={styles.productPhoto}
+                />
+                <TouchableOpacity
+                  style={styles.removePhotoBtn}
+                  onPress={() => {
+                    const updated = [...form.productPhotos];
+                    updated.splice(idx, 1);
+                    setForm({ ...form, productPhotos: updated });
+                  }}
+                >
+                  <Text style={styles.removePhotoText}>✖</Text>
+                </TouchableOpacity>
+              </View>
+            ))}
+          </ScrollView>
+        </View>
+
+        {/* Product Info */}
         <Text style={styles.sectionTitle}>Product Information</Text>
         <View style={styles.row}>
           <View style={styles.inputGroup}>
@@ -188,12 +244,11 @@ export default function CreateAmcScreen() {
               style={styles.picker}
               onValueChange={(v) => handleInput("category", v)}
             >
-              <Picker.Item label="Select Category" value="" style={{ fontSize: makeScale(14) }} />
-              <Picker.Item label="Electronics" value="electronics" style={{ fontSize: makeScale(14) }} />
-              <Picker.Item label="Appliance" value="appliance" style={{ fontSize: makeScale(14) }} />
+              <Picker.Item label="Select Category" value="" style={{fontSize:makeScale(14)}}/>
+              <Picker.Item label="Electronics" value="electronics" style={{fontSize:makeScale(14)}}/>
+              <Picker.Item label="Appliance" value="appliance" style={{fontSize:makeScale(14)}}/>
             </Picker>
           </View>
-
           <View style={styles.inputGroup}>
             <Text style={styles.label}>Brand *</Text>
             <Picker
@@ -201,9 +256,9 @@ export default function CreateAmcScreen() {
               style={styles.picker}
               onValueChange={(v) => handleInput("brand", v)}
             >
-              <Picker.Item label="Select Brand" value="" style={{ fontSize: makeScale(14) }}/>
-              <Picker.Item label="Samsung" value="samsung" style={{ fontSize: makeScale(14) }}/>
-              <Picker.Item label="LG" value="lg" style={{ fontSize: makeScale(14) }}/>
+              <Picker.Item label="Select Brand" value="" style={{fontSize:makeScale(14)}}/>
+              <Picker.Item label="Samsung" value="samsung" style={{fontSize:makeScale(14)}}/>
+              <Picker.Item label="LG" value="lg" style={{fontSize:makeScale(14)}}/>
             </Picker>
           </View>
         </View>
@@ -216,12 +271,11 @@ export default function CreateAmcScreen() {
               style={styles.picker}
               onValueChange={(v) => handleInput("type", v)}
             >
-              <Picker.Item label="Select Type" value="" style={{ fontSize: makeScale(14) }}/>
-              <Picker.Item label="Washing Machine" value="wm" style={{ fontSize: makeScale(13) }}/>
-              <Picker.Item label="Refrigerator" value="fridge" style={{ fontSize: makeScale(14) }}/>
+              <Picker.Item label="Select Type" value="" style={{fontSize:makeScale(14)}}/>
+              <Picker.Item label="Washing Machine" value="wm" style={{fontSize:makeScale(112)}}/>
+              <Picker.Item label="Refrigerator" value="fridge" style={{fontSize:makeScale(14)}}/>
             </Picker>
           </View>
-
           <View style={styles.inputGroup}>
             <Text style={styles.label}>Model *</Text>
             <TextInput
@@ -247,18 +301,26 @@ export default function CreateAmcScreen() {
         </View>
       </ScrollView>
 
-     
+      {/* Bottom Bar */}
       <View style={styles.bottomContainer}>
         <View style={styles.finalAmountContainer}>
-          <Text style={styles.finalAmountLabel}>Final Amount (incl. 18% GST)</Text>
+          <Text style={styles.finalAmountLabel}>
+            Final Amount (incl. 18% GST)
+          </Text>
           <Text style={styles.finalAmountValue}>₹{finalAmount.toFixed(2)}</Text>
         </View>
 
         <View style={styles.buttonRow}>
-          <TouchableOpacity style={[styles.button, styles.cancelButton]} onPress={() => navigation.goBack()}>
+          <TouchableOpacity
+            style={[styles.button, styles.cancelButton]}
+            onPress={() => navigation.goBack()}
+          >
             <Text style={styles.buttonText}>Cancel</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={[styles.button, styles.createButton]} onPress={handleSubmit}>
+          <TouchableOpacity
+            style={[styles.button, styles.createButton]}
+            onPress={handleSubmit}
+          >
             <Text style={[styles.buttonText, { color: "#fff" }]}>Create WEC</Text>
           </TouchableOpacity>
         </View>
@@ -267,6 +329,7 @@ export default function CreateAmcScreen() {
   );
 }
 
+// ---- Styles ----
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#F8F8F8" },
   headerRow: { flexDirection: "row", alignItems: "center", marginBottom: makeScale(15) },
@@ -299,7 +362,22 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     justifyContent: "center",
   },
-  fileText: { color: "#007BFF", fontWeight: "500" },
+  fileText: { color: "#007BFF", fontWeight: "500", textAlign: "center" },
+
+  photoWrapper: { position: "relative", marginRight: makeScale(8) },
+  productPhoto: { width: makeScale(50), height: makeScale(50), borderRadius: 8 },
+  removePhotoBtn: {
+    position: "absolute",
+    top: -5,
+    right: -5,
+    backgroundColor: "#FF4444",
+    width: makeScale(20),
+    height: makeScale(20),
+    borderRadius: 10,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  removePhotoText: { color: "#fff", fontSize: makeScale(12), fontWeight: "700" },
   bottomContainer: {
     padding: makeScale(15),
     backgroundColor: "#fff",
