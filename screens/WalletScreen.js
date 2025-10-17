@@ -166,7 +166,7 @@ export default function WalletManagement({ navigation }) {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "#F8FAFC" }}>
       <StatusBar barStyle="dark-content" backgroundColor="#F8FAFC" />
-      <Header />  {/* Make sure Header has no top margin/padding */}
+      <Header /> 
       <View style={styles.divider} />
 
       <ScrollView

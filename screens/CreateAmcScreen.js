@@ -7,16 +7,32 @@ import {
   TouchableOpacity,
   ScrollView,
   Alert,
+  Platform,
 } from "react-native";
 import { Picker } from "@react-native-picker/picker";
 import { useNavigation } from "@react-navigation/native";
 import Icon from "react-native-vector-icons/Ionicons";
+import { launchImageLibrary, launchCamera } from "react-native-image-picker";
 
 const { width } = require("react-native").Dimensions.get("window");
 const makeScale = (v) => (v * width) / 375;
 
 export default function CreateAmcScreen() {
   const navigation = useNavigation();
+
+
+  const pickFile = () => {
+    launchImageLibrary(
+      { mediaType: "mixed", includeBase64: false },
+      (response) => {
+        if (!response.didCancel && !response.errorCode) {
+          const file = response.assets[0];
+          setForm({ ...form, proof: { name: file.fileName, uri: file.uri, type: file.type } });
+        }
+      }
+    );
+  };
+
 
   const [form, setForm] = useState({
     name: "",
@@ -38,17 +54,40 @@ export default function CreateAmcScreen() {
     setForm({ ...form, [key]: value });
   };
 
-  const pickFile = async () => {
-    Alert.alert(
-      "Upload Purchase Proof",
-      "Simulated file upload (no actual file picker).",
-      [{ text: "OK", onPress: () => setForm({ ...form, proof: { name: "purchase_proof.pdf" } }) }]
+  <TouchableOpacity style={styles.fileButton} onPress={pickFile}>
+    <Text style={styles.fileText}>
+      {form.proof ? form.proof.name : "Choose File"}
+    </Text>
+  </TouchableOpacity>
+
+
+  const openGallery = () => {
+    launchImageLibrary(
+      { mediaType: "mixed", includeBase64: false },
+      (response) => {
+        if (!response.didCancel && !response.errorCode) {
+          const file = response.assets[0];
+          setForm({ ...form, proof: { name: file.fileName, uri: file.uri, type: file.type } });
+        }
+      }
+    );
+  };
+
+  const openCamera = () => {
+    launchCamera(
+      { mediaType: "photo", includeBase64: false },
+      (response) => {
+        if (!response.didCancel && !response.errorCode) {
+          const file = response.assets[0];
+          setForm({ ...form, proof: { name: file.fileName, uri: file.uri, type: file.type } });
+        }
+      }
     );
   };
 
   useEffect(() => {
     const value = parseFloat(form.purchaseValue) || 0;
-    const tax = value * 0.18; // Example: 18% tax
+    const tax = value * 0.18;
     setFinalAmount(value + tax);
   }, [form.purchaseValue]);
 
@@ -64,7 +103,7 @@ export default function CreateAmcScreen() {
   return (
     <View style={{ flex: 1 }}>
       <ScrollView style={styles.container} contentContainerStyle={{ padding: makeScale(15) }}>
-        {/* Header */}
+
         <View style={styles.headerRow}>
           <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
             <Icon name="arrow-back" size={24} color="#000" />
@@ -72,7 +111,7 @@ export default function CreateAmcScreen() {
           <Text style={styles.header}>Create New WEC</Text>
         </View>
 
-        {/* Customer Information */}
+
         <Text style={styles.sectionTitle}>Customer Information</Text>
         <View style={styles.row}>
           <View style={styles.inputGroup}>
@@ -130,14 +169,16 @@ export default function CreateAmcScreen() {
             />
           </View>
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>Upload Purchase Proof</Text>
+            <Text style={styles.label}>Upload File / Photo</Text>
             <TouchableOpacity style={styles.fileButton} onPress={pickFile}>
-              <Text style={styles.fileText}>{form.proof ? form.proof.name : "Choose File"}</Text>
+              <Text style={styles.fileText}>
+                {form.proof ? form.proof.name : "Choose File / Photo"}
+              </Text>
             </TouchableOpacity>
           </View>
         </View>
 
-        {/* Product Information */}
+
         <Text style={styles.sectionTitle}>Product Information</Text>
         <View style={styles.row}>
           <View style={styles.inputGroup}>
@@ -147,9 +188,9 @@ export default function CreateAmcScreen() {
               style={styles.picker}
               onValueChange={(v) => handleInput("category", v)}
             >
-              <Picker.Item label="Select Category" value="" />
-              <Picker.Item label="Electronics" value="electronics" />
-              <Picker.Item label="Appliance" value="appliance" />
+              <Picker.Item label="Select Category" value="" style={{ fontSize: makeScale(14) }} />
+              <Picker.Item label="Electronics" value="electronics" style={{ fontSize: makeScale(14) }} />
+              <Picker.Item label="Appliance" value="appliance" style={{ fontSize: makeScale(14) }} />
             </Picker>
           </View>
 
@@ -160,9 +201,9 @@ export default function CreateAmcScreen() {
               style={styles.picker}
               onValueChange={(v) => handleInput("brand", v)}
             >
-              <Picker.Item label="Select Brand" value="" />
-              <Picker.Item label="Samsung" value="samsung" />
-              <Picker.Item label="LG" value="lg" />
+              <Picker.Item label="Select Brand" value="" style={{ fontSize: makeScale(14) }}/>
+              <Picker.Item label="Samsung" value="samsung" style={{ fontSize: makeScale(14) }}/>
+              <Picker.Item label="LG" value="lg" style={{ fontSize: makeScale(14) }}/>
             </Picker>
           </View>
         </View>
@@ -175,9 +216,9 @@ export default function CreateAmcScreen() {
               style={styles.picker}
               onValueChange={(v) => handleInput("type", v)}
             >
-              <Picker.Item label="Select Type" value="" />
-              <Picker.Item label="Washing Machine" value="wm" />
-              <Picker.Item label="Refrigerator" value="fridge" />
+              <Picker.Item label="Select Type" value="" style={{ fontSize: makeScale(14) }}/>
+              <Picker.Item label="Washing Machine" value="wm" style={{ fontSize: makeScale(13) }}/>
+              <Picker.Item label="Refrigerator" value="fridge" style={{ fontSize: makeScale(14) }}/>
             </Picker>
           </View>
 
@@ -206,7 +247,7 @@ export default function CreateAmcScreen() {
         </View>
       </ScrollView>
 
-      {/* Bottom Final Amount + Buttons */}
+     
       <View style={styles.bottomContainer}>
         <View style={styles.finalAmountContainer}>
           <Text style={styles.finalAmountLabel}>Final Amount (incl. 18% GST)</Text>
@@ -234,7 +275,7 @@ const styles = StyleSheet.create({
   sectionTitle: { fontSize: makeScale(16), fontWeight: "600", marginVertical: makeScale(8) },
   row: { flexDirection: "row", justifyContent: "space-between" },
   inputGroup: { width: "48%", marginBottom: makeScale(10) },
-  label: { fontSize: makeScale(13), fontWeight: "500", color: "#555" },
+  label: { fontSize: makeScale(12), fontWeight: "500", color: "#555" },
   input: {
     borderWidth: 1,
     borderColor: "#ddd",
@@ -287,4 +328,3 @@ const styles = StyleSheet.create({
   createButton: { backgroundColor: "#007BFF" },
   buttonText: { fontSize: makeScale(15), fontWeight: "600" },
 });
- 

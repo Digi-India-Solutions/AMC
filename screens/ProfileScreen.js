@@ -8,10 +8,12 @@ import {
   TouchableOpacity,
   Image,
   TextInput,
+  Alert,
 } from "react-native";
 import Icon from "react-native-vector-icons/Ionicons";
-import LinearGradient from "react-native-linear-gradient"; 
+import LinearGradient from "react-native-linear-gradient";
 import { useNavigation } from "@react-navigation/native";
+import { launchCamera, launchImageLibrary } from "react-native-image-picker";
 
 const { width } = Dimensions.get("window");
 
@@ -22,10 +24,60 @@ export default function ProfileScreen() {
     name: "Rohit Rajput",
     email: "rohit@example.com",
     phone: "+91 9876543210",
+    photo: null, // store selected image URI
   });
 
   const handleChange = (field, value) => {
     setProfile({ ...profile, [field]: value });
+  };
+
+  const selectProfileImage = () => {
+    const options = {
+      mediaType: "photo",
+      maxWidth: 500,
+      maxHeight: 500,
+      quality: 0.8,
+      includeBase64: false,
+    };
+
+    Alert.alert(
+      "Change Profile Photo",
+      "Choose an option",
+      [
+        {
+          text: "Camera",
+          onPress: () => {
+            launchCamera(options, (response) => {
+              if (response.didCancel) return;
+              if (response.errorCode) {
+                console.log("Camera Error: ", response.errorMessage);
+                return;
+              }
+              if (response.assets && response.assets.length > 0) {
+                setProfile({ ...profile, photo: response.assets[0].uri });
+              }
+            });
+          },
+        },
+        {
+          text: "Gallery",
+          onPress: () => {
+            launchImageLibrary(options, (response) => {
+              if (response.didCancel) return;
+              if (response.errorCode) {
+                console.log("Gallery Error: ", response.errorMessage);
+                return;
+              }
+              if (response.assets && response.assets.length > 0) {
+                setProfile({ ...profile, photo: response.assets[0].uri });
+              }
+            });
+          },
+        },
+        { text: "Cancel", style: "cancel" },
+      ],
+      { cancelable: true }
+    );
   };
 
   return (
@@ -34,7 +86,7 @@ export default function ProfileScreen() {
       contentContainerStyle={{ paddingBottom: 40 }}
       showsVerticalScrollIndicator={false}
     >
-      {/* Gradient Header */}
+
       <LinearGradient
         colors={["#4F86F7", "#6AA9FF"]}
         style={styles.headerContainer}
@@ -42,21 +94,20 @@ export default function ProfileScreen() {
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
           <Icon name="arrow-back" size={24} color="#fff" />
         </TouchableOpacity>
-        {/* <Text style={styles.headerTitle}>My Profile</Text> */}
       </LinearGradient>
 
-      {/* Profile Picture */}
+
       <View style={styles.profilePicContainer}>
         <Image
-          source={require("../assets/logo.png")}
+          source={profile.photo ? { uri: profile.photo } : require("../assets/logo.png")}
           style={styles.profilePic}
         />
-        <TouchableOpacity style={styles.editIcon}>
+        <TouchableOpacity style={styles.editIcon} onPress={selectProfileImage}>
           <Icon name="pencil" size={20} color="#fff" />
         </TouchableOpacity>
       </View>
 
-      {/* Profile Card */}
+
       <View style={styles.infoContainer}>
         <Text style={styles.sectionTitle}>Personal Information</Text>
 
@@ -113,11 +164,6 @@ const styles = StyleSheet.create({
     top: 50,
     left: 20,
     padding: 6,
-  },
-  headerTitle: {
-    fontSize: 24,
-    fontWeight: "700",
-    color: "#fff",
   },
 
   profilePicContainer: {
