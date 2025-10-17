@@ -308,7 +308,7 @@ const styles = StyleSheet.create({
   safeContainer: {
     flex: 1,
     backgroundColor: "#f5f6fa",
-    paddingTop: Platform.OS === "android" ? StatusBar.currentHeight : 0,
+   
   },
   center: { flex: 1, justifyContent: "center", alignItems: "center" },
   headerRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginVertical: 10 },
