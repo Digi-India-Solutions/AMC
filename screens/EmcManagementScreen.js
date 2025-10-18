@@ -26,22 +26,69 @@ const { width, height } = Dimensions.get("window");
 const fetchAMCs = async () => {
   await new Promise((r) => setTimeout(r, 500));
   const data = [
-    { id: "WEC001", customer: "Rohit Rajput", category: "AC", brand: "Voltas", model: "123V DZU", amount: 2500, startDate: "2024-01-15", endDate: "2025-01-15" },
-    { id: "WEC002", customer: "Priya Sharma", category: "Refrigerator", brand: "LG", model: "GL-T292RPZY", amount: 2880, startDate: "2023-10-01", endDate: "2024-09-30" },
-    { id: "WEC003", customer: "Amit Verma", category: "Laptop", brand: "Dell", model: "Inspiron 15", amount: 4200, startDate: "2022-01-01", endDate: "2023-12-31" },
-  ];
+  { 
+    id: "WEC001", 
+    customer: "Rohit Rajput", 
+    category: "AC", 
+    brand: "Voltas", 
+    model: "123V DZU", 
+    amount: 2500, 
+    startDate: "2024-01-15", 
+    endDate: "2025-12-30" // Active
+  },
+  { 
+    id: "WEC002", 
+    customer: "Priya Sharma", 
+    category: "Refrigerator", 
+    brand: "LG", 
+    model: "GL-T292RPZY", 
+    amount: 2880, 
+    startDate: "2023-10-01", 
+    endDate: "2025-09-30" // Active
+  },
+  { 
+    id: "WEC003", 
+    customer: "Amit Verma", 
+    category: "Laptop", 
+    brand: "Dell", 
+    model: "Inspiron 15", 
+    amount: 4200, 
+    startDate: "2022-01-01", 
+    endDate: "2023-12-31" // Expired
+  },
+  { 
+    id: "WEC004", 
+    customer: "Sneha Gupta", 
+    category: "Washing Machine", 
+    brand: "Samsung", 
+    model: "WA70A4002GS", 
+    amount: 3100, 
+    startDate: "2023-06-15", 
+    endDate: "2025-11-01" // Active
+  },
+  { 
+    id: "WEC005", 
+    customer: "Vikram Mehta", 
+    category: "Water Purifier", 
+    brand: "Kent", 
+    model: "Grand Plus", 
+    amount: 1800, 
+    startDate: "2022-04-01", 
+    endDate: "2024-05-01" 
+  }
+];
 
-  const today = new Date();
-  return data.map((item) => {
-    const end = new Date(item.endDate);
-    const daysLeft = Math.floor((end - today) / (1000 * 60 * 60 * 24));
-    let status = "Active";
-    if (daysLeft < 0) status = "Expired";
-    return { ...item, status, daysLeft };
-  });
-};
+const today = new Date();
+return data.map((item) => {
+  const end = new Date(item.endDate);
+  const daysLeft = Math.floor((end - today) / (1000 * 60 * 60 * 24));
+  let status = "Active";
+  if (daysLeft < 0) status = "Expired";
+  return { ...item, status, daysLeft };
+});
+}
 
-// Helpers
+
 const statusColor = (status) => {
   if (status === "Active") return "#16a34a";
   if (status === "Expired") return "#ef4444";
@@ -56,7 +103,7 @@ const categoryColor = (category) => {
   }
 };
 
-// AMC Card
+
 const AMCCard = ({ item, index }) => {
   const anim = useRef(new Animated.Value(0)).current;
   useEffect(() => {
@@ -105,7 +152,7 @@ const AMCCard = ({ item, index }) => {
         >
           {item.status}
         </Text>
-        <View style={{ flexDirection: "row", marginTop: 10 }}>
+        <View style={{ flexDirection: 'row', marginTop: 10 }}>
           <Pressable
             onPress={() => Alert.alert("Share", `Sharing ${item.id}`)}
             style={({ pressed }) => [{ opacity: pressed ? 0.5 : 1, marginRight: 12 }]}
@@ -118,12 +165,12 @@ const AMCCard = ({ item, index }) => {
           >
             <Icon name="pencil-outline" size={22} color="#2563eb" />
           </Pressable>
-          <Pressable
+          {/* <Pressable
             onPress={() => Alert.alert("Options", `More options for ${item.id}`)}
             style={({ pressed }) => [{ opacity: pressed ? 0.5 : 1 }]}
           >
             <Icon name="ellipsis-vertical" size={22} color="#555" />
-          </Pressable>
+          </Pressable> */}
         </View>
       </View>
     </Animated.View>
@@ -232,7 +279,7 @@ export default function EmcManagementScreen() {
       <View style={styles.divider} />
 
 
-   {/*  <SafeAreaView style={{ flex: 1, backgroundColor: "#f5f6fa" }}>
+      {/*  <SafeAreaView style={{ flex: 1, backgroundColor: "#f5f6fa" }}>
        <StatusBar barStyle="dark-content" backgroundColor="#f5f6fa" />
        <Header />
        <View style={styles.divider} />*/}
@@ -328,7 +375,7 @@ const styles = StyleSheet.create({
   safeContainer: {
     flex: 1,
     backgroundColor: "#f5f6fa",
-   
+
   },
   center: { flex: 1, justifyContent: "center", alignItems: "center" },
   headerRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginVertical: 10 },

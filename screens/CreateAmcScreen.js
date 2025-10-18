@@ -31,30 +31,60 @@ export default function CreateAmcScreen() {
     type: "",
     model: "",
     purchaseValue: "",
-    billProof: null,
+    billProof: [], // ✅ initialize correctly
     productPhotos: [],
   });
 
   const [finalAmount, setFinalAmount] = useState(0);
 
-  const handleInput = (key, value) => {
-    setForm({ ...form, [key]: value });
+  const handleInput = (key, value) => setForm({ ...form, [key]: value });
+
+  // ---- Upload Bill ----
+  const pickUploadBill = () => {
+    Alert.alert("Upload Bill", "Choose source", [
+      {
+        text: "Camera",
+        onPress: () => {
+          launchCamera({ mediaType: "photo" }, (response) => {
+            if (!response.didCancel && !response.errorCode) {
+              const file = response.assets[0];
+              setForm((prev) => ({
+                ...prev,
+                billProof: [
+                  ...prev.billProof,
+                  { name: file.fileName, uri: file.uri, type: file.type },
+                ],
+              }));
+            }
+          });
+        },
+      },
+      // {
+      //   text: "Gallery",
+      //   onPress: () => {
+      //     launchImageLibrary(
+      //       { mediaType: "photo", selectionLimit: 5 },
+      //       (response) => {
+      //         if (!response.didCancel && !response.errorCode) {
+      //           const files = response.assets.map((f) => ({
+      //             name: f.fileName,
+      //             uri: f.uri,
+      //             type: f.type,
+      //           }));
+      //           setForm((prev) => ({
+      //             ...prev,
+      //             billProof: [...prev.billProof, ...files],
+      //           }));
+      //         }
+      //       }
+      //     );
+      //   },
+      // },
+      { text: "Cancel", style: "cancel" },
+    ]);
   };
 
-  // ---- Pick Bill (Single Image from gallery) ----
-  const pickBill = () => {
-    launchImageLibrary({ mediaType: "photo" }, (response) => {
-      if (!response.didCancel && !response.errorCode) {
-        const file = response.assets[0];
-        setForm({
-          ...form,
-          billProof: { name: file.fileName, uri: file.uri, type: file.type },
-        });
-      }
-    });
-  };
-
-  // ---- Pick Product Photos (Multiple images with choice) ----
+  // ---- Upload Product Photos ----
   const pickProductPhotos = () => {
     Alert.alert("Upload Product Photos", "Choose source", [
       {
@@ -102,8 +132,9 @@ export default function CreateAmcScreen() {
   // ---- Auto GST Calculation ----
   useEffect(() => {
     const value = parseFloat(form.purchaseValue) || 0;
-    const tax = value * 0.18;
-    setFinalAmount(value + tax);
+   const tax = value * 0.08;
+setFinalAmount(tax);
+
   }, [form.purchaseValue]);
 
   // ---- Submit ----
@@ -124,10 +155,7 @@ export default function CreateAmcScreen() {
       >
         {/* Header */}
         <View style={styles.headerRow}>
-          <TouchableOpacity
-            onPress={() => navigation.goBack()}
-            style={styles.backButton}
-          >
+          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
             <Icon name="arrow-back" size={24} color="#000" />
           </TouchableOpacity>
           <Text style={styles.header}>Create New WEC</Text>
@@ -191,34 +219,43 @@ export default function CreateAmcScreen() {
               onChangeText={(v) => handleInput("imei", v)}
             />
           </View>
+
           <View style={styles.inputGroup}>
             <Text style={styles.label}>Upload Bill</Text>
-            <TouchableOpacity style={styles.fileButton} onPress={pickBill}>
-              <Text style={styles.fileText}>
-                {form.billProof ? form.billProof.name : "Choose Bill"}
-              </Text>
+            <TouchableOpacity style={styles.fileButton} onPress={pickUploadBill}>
+              <Text style={styles.fileText}>Choose Bill</Text>
             </TouchableOpacity>
+            <ScrollView horizontal style={{ marginTop: 10 }}>
+              {form.billProof.map((bill, i) => (
+                <View key={i} style={styles.photoWrapper}>
+                  <Image source={{ uri: bill.uri }} style={styles.productPhoto} />
+                  <TouchableOpacity
+                    style={styles.removePhotoBtn}
+                    onPress={() => {
+                      const updated = [...form.billProof];
+                      updated.splice(i, 1);
+                      setForm({ ...form, billProof: updated });
+                    }}
+                  >
+                    <Text style={styles.removePhotoText}>✖</Text>
+                  </TouchableOpacity>
+                </View>
+              ))}
+            </ScrollView>
           </View>
         </View>
 
-        {/* Upload Product Photos */}
+       
         <View style={styles.inputGroup}>
           <Text style={styles.label}>Upload Product Photos</Text>
           <TouchableOpacity style={styles.fileButton} onPress={pickProductPhotos}>
             <Text style={styles.fileText}>Choose Products...</Text>
           </TouchableOpacity>
 
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            style={{ marginTop: 10 }}
-          >
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginTop: 10 }}>
             {form.productPhotos.map((img, idx) => (
               <View key={idx} style={styles.photoWrapper}>
-                <Image
-                  source={{ uri: img.uri }}
-                  style={styles.productPhoto}
-                />
+                <Image source={{ uri: img.uri }} style={styles.productPhoto} />
                 <TouchableOpacity
                   style={styles.removePhotoBtn}
                   onPress={() => {
@@ -244,9 +281,9 @@ export default function CreateAmcScreen() {
               style={styles.picker}
               onValueChange={(v) => handleInput("category", v)}
             >
-              <Picker.Item label="Select Category" value="" style={{fontSize:makeScale(14)}}/>
-              <Picker.Item label="Electronics" value="electronics" style={{fontSize:makeScale(14)}}/>
-              <Picker.Item label="Appliance" value="appliance" style={{fontSize:makeScale(14)}}/>
+              <Picker.Item label="Select Category" value="" />
+              <Picker.Item label="Electronics" value="electronics" />
+              <Picker.Item label="Appliance" value="appliance" />
             </Picker>
           </View>
           <View style={styles.inputGroup}>
@@ -256,9 +293,9 @@ export default function CreateAmcScreen() {
               style={styles.picker}
               onValueChange={(v) => handleInput("brand", v)}
             >
-              <Picker.Item label="Select Brand" value="" style={{fontSize:makeScale(14)}}/>
-              <Picker.Item label="Samsung" value="samsung" style={{fontSize:makeScale(14)}}/>
-              <Picker.Item label="LG" value="lg" style={{fontSize:makeScale(14)}}/>
+              <Picker.Item label="Select Brand" value="" />
+              <Picker.Item label="Samsung" value="samsung" />
+              <Picker.Item label="LG" value="lg" />
             </Picker>
           </View>
         </View>
@@ -271,9 +308,9 @@ export default function CreateAmcScreen() {
               style={styles.picker}
               onValueChange={(v) => handleInput("type", v)}
             >
-              <Picker.Item label="Select Type" value="" style={{fontSize:makeScale(14)}}/>
-              <Picker.Item label="Washing Machine" value="wm" style={{fontSize:makeScale(112)}}/>
-              <Picker.Item label="Refrigerator" value="fridge" style={{fontSize:makeScale(14)}}/>
+              <Picker.Item label="Select Type" value="" />
+              <Picker.Item label="Washing Machine" value="wm" />
+              <Picker.Item label="Refrigerator" value="fridge" />
             </Picker>
           </View>
           <View style={styles.inputGroup}>
@@ -305,7 +342,7 @@ export default function CreateAmcScreen() {
       <View style={styles.bottomContainer}>
         <View style={styles.finalAmountContainer}>
           <Text style={styles.finalAmountLabel}>
-            Final Amount (incl. 18% GST)
+           WEC Amount (incl. 18% GST)
           </Text>
           <Text style={styles.finalAmountValue}>₹{finalAmount.toFixed(2)}</Text>
         </View>
@@ -329,7 +366,6 @@ export default function CreateAmcScreen() {
   );
 }
 
-// ---- Styles ----
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#F8F8F8" },
   headerRow: { flexDirection: "row", alignItems: "center", marginBottom: makeScale(15) },
@@ -363,7 +399,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   fileText: { color: "#007BFF", fontWeight: "500", textAlign: "center" },
-
   photoWrapper: { position: "relative", marginRight: makeScale(8) },
   productPhoto: { width: makeScale(50), height: makeScale(50), borderRadius: 8 },
   removePhotoBtn: {
