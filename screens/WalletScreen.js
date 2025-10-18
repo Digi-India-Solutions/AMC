@@ -110,11 +110,11 @@ export default function WalletManagement({ navigation }) {
   const filteredData =
     selectedTab === "Wallet Balances"
       ? wallet.users.filter((u) =>
-          u.name.toLowerCase().includes(search.toLowerCase())
-        )
+        u.name.toLowerCase().includes(search.toLowerCase())
+      )
       : wallet.transactions.filter((t) =>
-          t.name.toLowerCase().includes(search.toLowerCase())
-        );
+        t.name.toLowerCase().includes(search.toLowerCase())
+      );
 
   const renderTransaction = ({ item, index }) => {
     const anim = new Animated.Value(0);
@@ -167,30 +167,26 @@ export default function WalletManagement({ navigation }) {
 
   return (
     <View style={styles.container}>
-          {/* ✅ Status Bar */}
-          <StatusBar
-            backgroundColor="#F7F8FA"
-            barStyle={Platform.OS === "ios" ? "dark-content" : "dark-content"}
-            translucent={false}
-          />
-    
-          {/* ✅ Header (no extra top padding now) */}
-          <View style={{ paddingTop: Platform.OS === "ios" ? insets.top : 0 }}>
-            <Header />
-          </View>
-    
-          {/* ✅ Divider below header */}
-          <View style={styles.divider} />
-    
+      {/* ✅ Status Bar */}
+      <StatusBar
+        backgroundColor="#F7F8FA"
+        barStyle={Platform.OS === "ios" ? "dark-content" : "dark-content"}
+        translucent={false}
+      />
+
+      {/* ✅ Header (no extra top padding now) */}
+      <View style={{ paddingTop: Platform.OS === "ios" ? insets.top : 0 }}>
+        <Header />
+      </View>
+
+      {/* ✅ Divider below header */}
+      <View style={styles.divider} />
+
 
       <ScrollView
         style={styles.container}
         showsVerticalScrollIndicator={false}
-<<<<<<< HEAD
-        contentContainerStyle={{ padding: makeScale(10), paddingBottom: 100 }}
-=======
         contentContainerStyle={{ padding: makeScale(10), paddingBottom: 100 }}
->>>>>>> 3f32645188bacdbb73d88ec8942b129cbb407a6b
       >
         <Text style={styles.header}>Wallet Management</Text>
 
@@ -231,77 +227,77 @@ export default function WalletManagement({ navigation }) {
           />
         </View>
 
-       {selectedTab === "Wallet Balances" ? (
-  filteredData.length > 0 ? (
-    <FlatList
-      data={filteredData}
-      keyExtractor={(item) => item.id.toString()}
-      renderItem={({ item, index }) => {
-        const anim = new Animated.Value(0);
-        Animated.timing(anim, {
-          toValue: 1,
-          duration: 400,
-          delay: index * 80,
-          useNativeDriver: true,
-        }).start();
+        {selectedTab === "Wallet Balances" ? (
+          filteredData.length > 0 ? (
+            <FlatList
+              data={filteredData}
+              keyExtractor={(item) => item.id.toString()}
+              renderItem={({ item, index }) => {
+                const anim = new Animated.Value(0);
+                Animated.timing(anim, {
+                  toValue: 1,
+                  duration: 400,
+                  delay: index * 80,
+                  useNativeDriver: true,
+                }).start();
 
-        const translateY = anim.interpolate({
-          inputRange: [0, 1],
-          outputRange: [15, 0],
-        });
+                const translateY = anim.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [15, 0],
+                });
 
-        return (
-          <Animated.View
-            style={[
-              styles.userTransactionCard,
-              { opacity: anim, transform: [{ translateY }] },
-            ]}
-          >
-            <LinearGradient
-              colors={["#42A5F5", "#1E88E5"]}
-              style={styles.userIconCircle}
-            >
-              <Icon
-                name={item.type === "User" ? "person" : "business"}
-                size={22}
-                color="#fff"
-              />
-            </LinearGradient>
-            <View style={{ flex: 1, marginLeft: 10 }}>
-              <Text style={styles.description}>{item.name}</Text>
-              <Text style={styles.date}>{item.type} • {item.email}</Text>
-            </View>
-            <View style={{ alignItems: "flex-end" }}>
-              <Text style={[styles.amount, { color: "#1E88E5" }]}>
-                ₹{item.balance.toLocaleString()}
-              </Text>
-              <Text
-                style={{
-                  marginTop: 4,
-                  color: item.status === "Active" ? "#00C853" : "#D32F2F",
-                  fontWeight: "600",
-                  fontSize: 12,
-                }}
-              >
-                {item.status}
-              </Text>
-            </View>
-          </Animated.View>
-        );
-      }}
-      showsVerticalScrollIndicator={false}
-    />
-  ) : (
-    <Text style={styles.noData}>No users found.</Text>
-  )
-) : (
-  <FlatList
-    data={filteredData}
-    keyExtractor={(item) => item.id.toString()}
-    renderItem={renderTransaction}
-    showsVerticalScrollIndicator={false}
-  />
-)}
+                return (
+                  <Animated.View
+                    style={[
+                      styles.userTransactionCard,
+                      { opacity: anim, transform: [{ translateY }] },
+                    ]}
+                  >
+                    <LinearGradient
+                      colors={["#42A5F5", "#1E88E5"]}
+                      style={styles.userIconCircle}
+                    >
+                      <Icon
+                        name={item.type === "User" ? "person" : "business"}
+                        size={22}
+                        color="#fff"
+                      />
+                    </LinearGradient>
+                    <View style={{ flex: 1, marginLeft: 10 }}>
+                      <Text style={styles.description}>{item.name}</Text>
+                      <Text style={styles.date}>{item.type} • {item.email}</Text>
+                    </View>
+                    <View style={{ alignItems: "flex-end" }}>
+                      <Text style={[styles.amount, { color: "#1E88E5" }]}>
+                        ₹{item.balance.toLocaleString()}
+                      </Text>
+                      <Text
+                        style={{
+                          marginTop: 4,
+                          color: item.status === "Active" ? "#00C853" : "#D32F2F",
+                          fontWeight: "600",
+                          fontSize: 12,
+                        }}
+                      >
+                        {item.status}
+                      </Text>
+                    </View>
+                  </Animated.View>
+                );
+              }}
+              showsVerticalScrollIndicator={false}
+            />
+          ) : (
+            <Text style={styles.noData}>No users found.</Text>
+          )
+        ) : (
+          <FlatList
+            data={filteredData}
+            keyExtractor={(item) => item.id.toString()}
+            renderItem={renderTransaction}
+            showsVerticalScrollIndicator={false}
+          />
+        )}
 
       </ScrollView>
 
@@ -321,7 +317,7 @@ export default function WalletManagement({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1},
+  container: { flex: 1 },
   divider: { height: 1, backgroundColor: "#E0E0E0" },
   header: { fontSize: makeScale(22), fontWeight: "700", color: "#1A1A1A", marginBottom: 12 },
 
@@ -377,23 +373,22 @@ const styles = StyleSheet.create({
   overlay: { ...StyleSheet.absoluteFillObject, backgroundColor: "rgba(0,0,0,0.3)", zIndex: 998 },
   drawer: { position: "absolute", top: 0, left: 0, width: width * 0.75, height, backgroundColor: "#fff", zIndex: 999, elevation: 10 },
   userTransactionCard: {
-  backgroundColor: "#fff",
-  padding: 16,
-  borderRadius: 14,
-  marginBottom: 12,
-  elevation: 3,
-  flexDirection: "row",
-  alignItems: "center",
-  shadowColor: "#000",
-  shadowOpacity: 0.08,
-  shadowRadius: 3,
-},
-userIconCircle: {
-  width: 40,
-  height: 40,
-  borderRadius: 20,
-  justifyContent: "center",
-  alignItems: "center",
-},
-}); 
-  
+    backgroundColor: "#fff",
+    padding: 16,
+    borderRadius: 14,
+    marginBottom: 12,
+    elevation: 3,
+    flexDirection: "row",
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOpacity: 0.08,
+    shadowRadius: 3,
+  },
+  userIconCircle: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+});
