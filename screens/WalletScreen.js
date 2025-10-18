@@ -186,7 +186,7 @@ export default function WalletManagement({ navigation }) {
       <ScrollView
         style={styles.container}
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ padding: makeScale(10), paddingBottom: 100 }}
+        contentContainerStyle={{ paddingBottom: 100 }}
       >
         <Text style={styles.header}>Wallet Management</Text>
 
@@ -317,7 +317,7 @@ export default function WalletManagement({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#F7F8FA" },
+  container: { flex: 1, padding: makeScale(10) },
   divider: { height: 1, backgroundColor: "#E0E0E0" },
   header: { fontSize: makeScale(22), fontWeight: "700", color: "#1A1A1A", marginBottom: 12 },
 
