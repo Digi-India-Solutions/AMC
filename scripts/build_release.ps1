@@ -7,6 +7,10 @@ cd "$PSScriptRoot/../android"
 taskkill /IM java.exe /F /T | Out-Null
 taskkill /IM gradle.exe /F /T | Out-Null
 
+# 🔥 Run Gradle clean to clear cached native artifacts
+Write-Host "🧼 Running Gradle clean..."
+./gradlew clean -x lintVitalRelease
+
 # Remove only build artifacts, keep node_modules
 Remove-Item -Recurse -Force "app\build","app\.cxx","build",".gradle" -ErrorAction SilentlyContinue
 
