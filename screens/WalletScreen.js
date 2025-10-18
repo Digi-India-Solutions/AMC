@@ -186,7 +186,11 @@ export default function WalletManagement({ navigation }) {
       <ScrollView
         style={styles.container}
         showsVerticalScrollIndicator={false}
+<<<<<<< HEAD
         contentContainerStyle={{ padding: makeScale(10), paddingBottom: 100 }}
+=======
+        contentContainerStyle={{ padding: makeScale(10), paddingBottom: 100 }}
+>>>>>>> 3f32645188bacdbb73d88ec8942b129cbb407a6b
       >
         <Text style={styles.header}>Wallet Management</Text>
 
