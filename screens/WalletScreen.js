@@ -10,9 +10,10 @@ import {
   Image,
   Animated,
   FlatList,
-  SafeAreaView,
   StatusBar,
+  Platform,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Icon from "react-native-vector-icons/Ionicons";
 import LinearGradient from "react-native-linear-gradient";
 import Drawer from "../components/uicomponents/Drawer";
@@ -42,6 +43,7 @@ const dummyWallet = {
 };
 
 export default function WalletManagement({ navigation }) {
+  const insets = useSafeAreaInsets();
   const [wallet] = useState(dummyWallet);
   const [selectedTab, setSelectedTab] = useState("Wallet Balances");
   const [search, setSearch] = useState("");
@@ -164,15 +166,27 @@ export default function WalletManagement({ navigation }) {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: "#F8FAFC" }}>
-      <StatusBar barStyle="dark-content" backgroundColor="#F8FAFC" />
-      <Header /> 
-      <View style={styles.divider} />
+    <View style={styles.container}>
+          {/* ✅ Status Bar */}
+          <StatusBar
+            backgroundColor="#F7F8FA"
+            barStyle={Platform.OS === "ios" ? "dark-content" : "dark-content"}
+            translucent={false}
+          />
+    
+          {/* ✅ Header (no extra top padding now) */}
+          <View style={{ paddingTop: Platform.OS === "ios" ? insets.top : 0 }}>
+            <Header />
+          </View>
+    
+          {/* ✅ Divider below header */}
+          <View style={styles.divider} />
+    
 
       <ScrollView
         style={styles.container}
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 100 }}
+        contentContainerStyle={{ padding: makeScale(10), paddingBottom: 100 }}
       >
         <Text style={styles.header}>Wallet Management</Text>
 
@@ -298,12 +312,12 @@ export default function WalletManagement({ navigation }) {
           </Animated.View>
         </>
       )}
-    </SafeAreaView> 
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: makeScale(10) },
+  container: { flex: 1, backgroundColor: "#F7F8FA" },
   divider: { height: 1, backgroundColor: "#E0E0E0" },
   header: { fontSize: makeScale(22), fontWeight: "700", color: "#1A1A1A", marginBottom: 12 },
 

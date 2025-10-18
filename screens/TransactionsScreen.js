@@ -7,8 +7,10 @@ import {
   StyleSheet,
   Modal,
   TextInput,
+  StatusBar,
   Platform,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { SafeAreaView } from "react-native-safe-area-context";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import Icon from "react-native-vector-icons/Ionicons";
@@ -33,6 +35,7 @@ const transactionsData = {
 };
 
 export default function TransactionsScreen() {
+  const insets = useSafeAreaInsets();
   const [activeTab, setActiveTab] = useState("amc");
   const [searchText, setSearchText] = useState("");
   const [filterModalVisible, setFilterModalVisible] = useState(false);
@@ -82,9 +85,22 @@ export default function TransactionsScreen() {
   );
 
   return (
-    <SafeAreaView style={styles.safeContainer}>
-      <Header />
-      <View style={styles.divider} />
+    <View style={styles.container}>
+          {/* ✅ Status Bar */}
+          <StatusBar
+            backgroundColor="#F7F8FA"
+            barStyle={Platform.OS === "ios" ? "dark-content" : "dark-content"}
+            translucent={false}
+          />
+    
+          {/* ✅ Header (no extra top padding now) */}
+          <View style={{ paddingTop: Platform.OS === "ios" ? insets.top : 0 }}>
+            <Header />
+          </View>
+    
+          {/* ✅ Divider below header */}
+          <View style={styles.divider} />
+    
 
       <View style={styles.innerContainer}>
         {/* Tabs */}
@@ -232,12 +248,13 @@ export default function TransactionsScreen() {
           </View>
         </Modal>
       </View>
-    </SafeAreaView>
+    </View>
   );
 }
 
 /* ========== Styles ========== */
 const styles = StyleSheet.create({
+  container: { flex: 1, backgroundColor: "#F4F6FB" },
   safeContainer: { flex: 1, backgroundColor: "#F4F6FB" },
   innerContainer: { flex: 1, paddingHorizontal: 16, paddingTop: 10 },
   tabsContainer: { flexDirection: "row", marginBottom: 12 },

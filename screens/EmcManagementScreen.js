@@ -15,7 +15,7 @@ import {
   Platform,
 } from "react-native";
 import Icon from "react-native-vector-icons/Ionicons";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 import Drawer from "../components/uicomponents/Drawer";
 import Header from "../components/uicomponents/Header";
@@ -152,6 +152,7 @@ const SummaryCard = ({ label, count, color, icon, index }) => {
 
 export default function EmcManagementScreen() {
   const navigation = useNavigation();
+  const insets = useSafeAreaInsets();
   const [amcs, setAmcs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState("");
@@ -213,10 +214,28 @@ export default function EmcManagementScreen() {
     );
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: "#f5f6fa" }}>
-      <StatusBar barStyle="dark-content" backgroundColor="#f5f6fa" />
-      <Header />
+
+    <View style={styles.container}>
+      {/* ✅ Status Bar */}
+      <StatusBar
+        backgroundColor="#F7F8FA"
+        barStyle={Platform.OS === "ios" ? "dark-content" : "dark-content"}
+        translucent={false}
+      />
+
+      {/* ✅ Header (no extra top padding now) */}
+      <View style={{ paddingTop: Platform.OS === "ios" ? insets.top : 0 }}>
+        <Header />
+      </View>
+
+      {/* ✅ Divider below header */}
       <View style={styles.divider} />
+
+
+   {/*  <SafeAreaView style={{ flex: 1, backgroundColor: "#f5f6fa" }}>
+       <StatusBar barStyle="dark-content" backgroundColor="#f5f6fa" />
+       <Header />
+       <View style={styles.divider} />*/}
 
       <ScrollView
         showsVerticalScrollIndicator={false}
@@ -300,11 +319,12 @@ export default function EmcManagementScreen() {
           </Animated.View>
         </>
       )}
-    </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
+  container: { flex: 1, backgroundColor: "#f5f6fa" },
   safeContainer: {
     flex: 1,
     backgroundColor: "#f5f6fa",
