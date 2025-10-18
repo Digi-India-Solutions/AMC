@@ -59,27 +59,27 @@ export default function CreateAmcScreen() {
           });
         },
       },
-      // {
-      //   text: "Gallery",
-      //   onPress: () => {
-      //     launchImageLibrary(
-      //       { mediaType: "photo", selectionLimit: 5 },
-      //       (response) => {
-      //         if (!response.didCancel && !response.errorCode) {
-      //           const files = response.assets.map((f) => ({
-      //             name: f.fileName,
-      //             uri: f.uri,
-      //             type: f.type,
-      //           }));
-      //           setForm((prev) => ({
-      //             ...prev,
-      //             billProof: [...prev.billProof, ...files],
-      //           }));
-      //         }
-      //       }
-      //     );
-      //   },
-      // },
+      {
+        text: "Gallery",
+        onPress: () => {
+          launchImageLibrary(
+            { mediaType: "photo", selectionLimit: 5 },
+            (response) => {
+              if (!response.didCancel && !response.errorCode) {
+                const files = response.assets.map((f) => ({
+                  name: f.fileName,
+                  uri: f.uri,
+                  type: f.type,
+                }));
+                setForm((prev) => ({
+                  ...prev,
+                  billProof: [...prev.billProof, ...files],
+                }));
+              }
+            }
+          );
+        },
+      },
       { text: "Cancel", style: "cancel" },
     ]);
   };
@@ -104,27 +104,27 @@ export default function CreateAmcScreen() {
           });
         },
       },
-      {
-        text: "Gallery",
-        onPress: () => {
-          launchImageLibrary(
-            { mediaType: "photo", selectionLimit: 5 },
-            (response) => {
-              if (!response.didCancel && !response.errorCode) {
-                const files = response.assets.map((f) => ({
-                  name: f.fileName,
-                  uri: f.uri,
-                  type: f.type,
-                }));
-                setForm((prev) => ({
-                  ...prev,
-                  productPhotos: [...prev.productPhotos, ...files],
-                }));
-              }
-            }
-          );
-        },
-      },
+      // {
+      //   text: "Gallery",
+      //   onPress: () => {
+      //     launchImageLibrary(
+      //       { mediaType: "photo", selectionLimit: 5 },
+      //       (response) => {
+      //         if (!response.didCancel && !response.errorCode) {
+      //           const files = response.assets.map((f) => ({
+      //             name: f.fileName,
+      //             uri: f.uri,
+      //             type: f.type,
+      //           }));
+      //           setForm((prev) => ({
+      //             ...prev,
+      //             productPhotos: [...prev.productPhotos, ...files],
+      //           }));
+      //         }
+      //       }
+      //     );
+      //   },
+      // },
       { text: "Cancel", style: "cancel" },
     ]);
   };
@@ -132,8 +132,8 @@ export default function CreateAmcScreen() {
   // ---- Auto GST Calculation ----
   useEffect(() => {
     const value = parseFloat(form.purchaseValue) || 0;
-   const tax = value * 0.08;
-setFinalAmount(tax);
+    const tax = value * 0.08;
+    setFinalAmount(tax);
 
   }, [form.purchaseValue]);
 
@@ -245,7 +245,7 @@ setFinalAmount(tax);
           </View>
         </View>
 
-       
+
         <View style={styles.inputGroup}>
           <Text style={styles.label}>Upload Product Photos</Text>
           <TouchableOpacity style={styles.fileButton} onPress={pickProductPhotos}>
@@ -342,7 +342,7 @@ setFinalAmount(tax);
       <View style={styles.bottomContainer}>
         <View style={styles.finalAmountContainer}>
           <Text style={styles.finalAmountLabel}>
-           WEC Amount (incl. 18% GST)
+            WEC Amount (incl. 18% GST)
           </Text>
           <Text style={styles.finalAmountValue}>₹{finalAmount.toFixed(2)}</Text>
         </View>

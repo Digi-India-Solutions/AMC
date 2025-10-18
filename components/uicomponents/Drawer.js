@@ -6,15 +6,15 @@ const { width, height } = Dimensions.get("window");
 
 export default function Drawer() {
     const navigation = useNavigation();
-    const [loggedIn, setLoggedIn] = useState(false); // default false
+    const [loggedIn, setLoggedIn] = useState(false); 
 
     return (
         <View style={styles.drawerContainer}>
             
-            {/* Top: Logo */}
+            
             <View style={styles.logoContainer}>
                 <Image
-                    source={require("../../assets/emi.png")} // Replace with your logo
+                    source={require("../../assets/1.png")} 
                     style={styles.logo}
                     resizeMode="contain"
                 />
@@ -31,12 +31,12 @@ export default function Drawer() {
                             <Text style={styles.authText}>Login</Text>
                         </TouchableOpacity>
 
-                        <TouchableOpacity
+                        {/* <TouchableOpacity
                             style={[styles.authButton, { backgroundColor: "#4F86F7", marginTop: 10 }]}
                             onPress={() => navigation.navigate('SignupScreen')}
                         >
                             <Text style={[styles.authText, { color: "#fff" }]}>Sign Up</Text>
-                        </TouchableOpacity>
+                        </TouchableOpacity> */}
                     </>
                 )}
             </View>

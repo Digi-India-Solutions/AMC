@@ -7,7 +7,6 @@ import {
   StyleSheet,
   Dimensions,
   ScrollView,
-  Image,
   Animated,
   FlatList,
   StatusBar,
@@ -27,25 +26,25 @@ const dummyWallet = {
   totalCredits: 125500,
   totalDebits: 5000,
   users: [
-    { id: 1, name: "Rohit Raj", type: "User", email: "rohit@test.com", balance: 500, status: "Active" },
-    { id: 2, name: "Priya Singh", type: "Vendor", email: "priya@test.com", balance: 1500, status: "Inactive" },
-    { id: 3, name: "Amit Verma", type: "User", email: "amit@test.com", balance: 2000, status: "Active" },
-    { id: 4, name: "Deepak Singh", type: "User", email: "deepak@test.com", balance: 2000, status: "Active" },
-    { id: 5, name: "Rahul ", type: "Vendor", email: "rahul@test.com", balance: 5000, status: "Active" },
-    { id: 6, name: "Somya", type: "User", email: "somya@test.com", balance: 3000, status: "Inactive" },
+    { id: 1, name: "Rohit Raj", type: "User", email: "rohit@test.com", balance: 500, item: "AC" },
+    { id: 2, name: "Priya Singh", type: "Vendor", email: "priya@test.com", balance: 1500, item: "LED TV" },
+    { id: 3, name: "Amit Verma", type: "User", email: "amit@test.com", balance: 2000, item: "Washing Machine" },
+    { id: 4, name: "Deepak Singh", type: "User", email: "deepak@test.com", balance: 2000, item: "Refrigerator" },
+    { id: 5, name: "Rahul", type: "Vendor", email: "rahul@test.com", balance: 5000, item: "Cooler" },
+    { id: 6, name: "Somya", type: "User", email: "somya@test.com", balance: 3000, item: "Microwave" },
   ],
   transactions: [
-    { id: 1, name: "Wallet Top-Up", type: "credit", date: "2025-10-01", amount: 1000, icon: "wallet" },
-    { id: 2, name: "Purchase – Grocery", type: "debit", date: "2025-10-02", amount: 500, icon: "cart" },
-    { id: 3, name: "Refund – Order #2435", type: "credit", date: "2025-09-25", amount: 300, icon: "refresh" },
-    { id: 4, name: "Transfer – Bank", type: "debit", date: "2025-08-15", amount: 2000, icon: "arrow-forward" },
+    { id: 1, name: "Wallet Recharge – Paytm", type: "credit", date: "2025-10-10", amount: 1000, icon: "wallet" },
+    { id: 2, name: "Wallet Bonus – Cashback", type: "credit", date: "2025-09-20", amount: 150, icon: "gift" },
+    { id: 3, name: "Wallet Refund – Order Cancelled #2435", type: "debit", date: "2025-09-05", amount: 300, icon: "refresh" },
+    // { id: 4, name: "Transfer – Bank", type: "debit", date: "2025-08-15", amount: 2000, icon: "arrow-forward" },
   ],
 };
 
 export default function WalletManagement({ navigation }) {
   const insets = useSafeAreaInsets();
   const [wallet] = useState(dummyWallet);
-  const [selectedTab, setSelectedTab] = useState("Wallet Balances");
+  const [selectedTab, setSelectedTab] = useState("WEC Transaction");
   const [search, setSearch] = useState("");
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
@@ -108,13 +107,13 @@ export default function WalletManagement({ navigation }) {
   );
 
   const filteredData =
-    selectedTab === "Wallet Balances"
+    selectedTab === "WEC Transaction"
       ? wallet.users.filter((u) =>
-        u.name.toLowerCase().includes(search.toLowerCase())
-      )
+          u.name.toLowerCase().includes(search.toLowerCase())
+        )
       : wallet.transactions.filter((t) =>
-        t.name.toLowerCase().includes(search.toLowerCase())
-      );
+          t.name.toLowerCase().includes(search.toLowerCase())
+        );
 
   const renderTransaction = ({ item, index }) => {
     const anim = new Animated.Value(0);
@@ -167,21 +166,17 @@ export default function WalletManagement({ navigation }) {
 
   return (
     <View style={styles.container}>
-      {/* ✅ Status Bar */}
       <StatusBar
         backgroundColor="#F7F8FA"
         barStyle={Platform.OS === "ios" ? "dark-content" : "dark-content"}
         translucent={false}
       />
 
-      {/* ✅ Header (no extra top padding now) */}
       <View style={{ paddingTop: Platform.OS === "ios" ? insets.top : 0 }}>
         <Header />
       </View>
 
-      {/* ✅ Divider below header */}
       <View style={styles.divider} />
-
 
       <ScrollView
         style={styles.container}
@@ -190,7 +185,6 @@ export default function WalletManagement({ navigation }) {
       >
         <Text style={styles.header}>Wallet Management</Text>
 
-        {/* Summary Cards */}
         <View style={styles.cardContainer}>
           {renderSummaryCard("Total Balance", wallet.totalBalance, "#00C853", "wallet")}
           {renderSummaryCard("Total Credits", wallet.totalCredits, "#2979FF", "arrow-up-circle")}
@@ -200,9 +194,8 @@ export default function WalletManagement({ navigation }) {
           {renderSummaryCard("Transactions", wallet.transactions.length, "#FFA000", "receipt")}
         </View>
 
-        {/* Tabs */}
         <View style={styles.tabContainer}>
-          {["Wallet Balances", "Transactions"].map((tab) => (
+          {["WEC Transaction", "Wallet Transactions"].map((tab) => (
             <TouchableOpacity
               key={tab}
               onPress={() => setSelectedTab(tab)}
@@ -215,7 +208,6 @@ export default function WalletManagement({ navigation }) {
           ))}
         </View>
 
-        {/* Search */}
         <View style={styles.searchContainer}>
           <Icon name="search" size={18} color="#777" style={{ marginRight: 6 }} />
           <TextInput
@@ -227,7 +219,7 @@ export default function WalletManagement({ navigation }) {
           />
         </View>
 
-        {selectedTab === "Wallet Balances" ? (
+        {selectedTab === "WEC Transaction" ? (
           filteredData.length > 0 ? (
             <FlatList
               data={filteredData}
@@ -263,23 +255,21 @@ export default function WalletManagement({ navigation }) {
                         color="#fff"
                       />
                     </LinearGradient>
+
+                    {/* ✅ Updated text section */}
                     <View style={{ flex: 1, marginLeft: 10 }}>
-                      <Text style={styles.description}>{item.name}</Text>
-                      <Text style={styles.date}>{item.type} • {item.email}</Text>
-                    </View>
-                    <View style={{ alignItems: "flex-end" }}>
-                      <Text style={[styles.amount, { color: "#1E88E5" }]}>
-                        ₹{item.balance.toLocaleString()}
+                      <Text style={styles.description}>
+                        {item.name}{" "}
+                        <Text style={{ color: "#777", fontSize: 13 }}>• {item.item}</Text>
                       </Text>
-                      <Text
-                        style={{
-                          marginTop: 4,
-                          color: item.status === "Active" ? "#00C853" : "#D32F2F",
-                          fontWeight: "600",
-                          fontSize: 12,
-                        }}
-                      >
-                        {item.status}
+                      <Text style={styles.date}>{item.email}
+                      </Text>
+                    </View>
+
+                    {/* ✅ Red amount with minus */}
+                    <View style={{ alignItems: "flex-end" }}>
+                      <Text style={[styles.amount, { color: "#E53935" }]}>
+                        -₹{item.balance.toLocaleString()}
                       </Text>
                     </View>
                   </Animated.View>
@@ -298,10 +288,8 @@ export default function WalletManagement({ navigation }) {
             showsVerticalScrollIndicator={false}
           />
         )}
-
       </ScrollView>
 
-      {/* Drawer */}
       {showDrawer && (
         <>
           <TouchableOpacity style={styles.overlay} onPress={closeDrawer} />
@@ -320,24 +308,19 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
   divider: { height: 1, backgroundColor: "#E0E0E0" },
   header: { fontSize: makeScale(22), fontWeight: "700", color: "#1A1A1A", marginBottom: 12 },
-
   cardContainer: { flexDirection: "row", justifyContent: "space-between", marginBottom: 10 },
   card: { width: "48%", backgroundColor: "#fff", borderRadius: 12, padding: 15, borderWidth: 1, borderColor: "#E0E0E0", elevation: 2 },
   cardRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
   cardTitle: { fontSize: 13, color: "#666" },
   cardValue: { fontSize: 20, fontWeight: "700" },
   iconBox: { padding: 10, borderRadius: 10 },
-
   tabContainer: { flexDirection: "row", marginTop: 5, marginBottom: 10 },
   tab: { marginRight: 20, paddingBottom: 6, borderBottomWidth: 2, borderBottomColor: "transparent" },
   activeTab: { borderBottomColor: "#2979FF" },
   tabText: { fontSize: 14, color: "#666" },
   activeTabText: { color: "#2979FF", fontWeight: "600" },
-
   searchContainer: { flexDirection: "row", alignItems: "center", backgroundColor: "#fff", borderRadius: 8, paddingHorizontal: 10, marginBottom: 15, borderWidth: 1, borderColor: "#ddd", elevation: 1 },
   searchInput: { flex: 1, fontSize: 14, color: "#000" },
-
-  // Transaction styling (similar to TransactionScreen)
   transactionCard: {
     backgroundColor: "#fff",
     padding: 16,
@@ -360,16 +343,7 @@ const styles = StyleSheet.create({
   description: { fontSize: 15, fontWeight: "600", color: "#222" },
   date: { fontSize: 12, color: "#888", marginTop: 2 },
   amount: { fontSize: 15, fontWeight: "bold" },
-
-  // Wallet Balances style
-  userCard: { backgroundColor: "#fff", borderRadius: 12, padding: 15, elevation: 2, marginBottom: 10 },
-  boxName: { fontSize: 16, fontWeight: "700" },
-  boxType: { fontSize: 13, color: "#555", marginTop: 2 },
-  boxEmail: { fontSize: 12, color: "#777", marginTop: 2 },
-  boxBalance: { fontSize: 16, fontWeight: "700", marginTop: 8 },
-  boxStatus: { fontSize: 13, fontWeight: "600", marginTop: 4 },
   noData: { textAlign: "center", marginTop: 20, color: "#999" },
-
   overlay: { ...StyleSheet.absoluteFillObject, backgroundColor: "rgba(0,0,0,0.3)", zIndex: 998 },
   drawer: { position: "absolute", top: 0, left: 0, width: width * 0.75, height, backgroundColor: "#fff", zIndex: 999, elevation: 10 },
   userTransactionCard: {

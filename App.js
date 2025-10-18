@@ -43,7 +43,7 @@ function TabNavigator() {
         tabBarIcon: ({ color, size }) => {
           let iconName;
           if (route.name === "Home") iconName = "home-outline";
-          else if (route.name === "EMC") iconName = "cube-outline";
+          else if (route.name === "WEC") iconName = "cube-outline";
           else if (route.name === "Wallet") iconName = "wallet-outline";
           else if (route.name === "Transaction") iconName = "swap-horizontal-outline";
           return <Icon name={iconName} size={size} color={color} />;
@@ -51,7 +51,7 @@ function TabNavigator() {
       })}
     >
       <Tab.Screen name="Home" component={HomeScreen} />
-      <Tab.Screen name="EMC" component={EmcManagementScreen} />
+      <Tab.Screen name="WEC" component={EmcManagementScreen} />
       <Tab.Screen name="Wallet" component={WalletScreen} />
       <Tab.Screen name="Transaction" component={TransactionScreen} />
     </Tab.Navigator>
