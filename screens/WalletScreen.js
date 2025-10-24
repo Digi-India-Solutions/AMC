@@ -48,26 +48,6 @@ export default function WalletManagement({ navigation }) {
   const [search, setSearch] = useState("");
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
-  const [showDrawer, setShowDrawer] = useState(false);
-  const slideAnim = useRef(new Animated.Value(-width * 0.75)).current;
-
-  const openDrawer = () => {
-    setShowDrawer(true);
-    Animated.timing(slideAnim, {
-      toValue: 0,
-      duration: 300,
-      useNativeDriver: true,
-    }).start();
-  };
-
-  const closeDrawer = () => {
-    Animated.timing(slideAnim, {
-      toValue: -width * 0.75,
-      duration: 250,
-      useNativeDriver: true,
-    }).start(() => setShowDrawer(false));
-  };
-
   useEffect(() => {
     Animated.timing(fadeAnim, {
       toValue: 1,
@@ -109,11 +89,11 @@ export default function WalletManagement({ navigation }) {
   const filteredData =
     selectedTab === "WEC Transaction"
       ? wallet.users.filter((u) =>
-          u.name.toLowerCase().includes(search.toLowerCase())
-        )
+        u.name.toLowerCase().includes(search.toLowerCase())
+      )
       : wallet.transactions.filter((t) =>
-          t.name.toLowerCase().includes(search.toLowerCase())
-        );
+        t.name.toLowerCase().includes(search.toLowerCase())
+      );
 
   const renderTransaction = ({ item, index }) => {
     const anim = new Animated.Value(0);
@@ -290,16 +270,7 @@ export default function WalletManagement({ navigation }) {
         )}
       </ScrollView>
 
-      {showDrawer && (
-        <>
-          <TouchableOpacity style={styles.overlay} onPress={closeDrawer} />
-          <Animated.View style={[styles.drawer, { transform: [{ translateX: slideAnim }] }]}>
-            <ScrollView>
-              <Drawer />
-            </ScrollView>
-          </Animated.View>
-        </>
-      )}
+
     </View>
   );
 }

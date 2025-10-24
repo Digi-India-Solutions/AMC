@@ -72,27 +72,19 @@ export default function HomeScreen() {
 
   return (
     <View style={styles.container}>
-      {/* ✅ Status Bar */}
       <StatusBar
         backgroundColor="#F7F8FA"
         barStyle={Platform.OS === "ios" ? "dark-content" : "dark-content"}
         translucent={false}
       />
 
-      {/* ✅ Header (no extra top padding now) */}
       <View style={{ paddingTop: Platform.OS === "ios" ? insets.top : 0 }}>
         <Header />
       </View>
 
-      {/* ✅ Divider below header */}
       <View style={styles.divider} />
 
-      {/* ✅ Main ScrollView */}
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ padding: 10 }}
-      >
-        {/* Title Row */}
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ padding: 10 }}>
         <View style={styles.headerRow}>
           <Text style={styles.title}>Dashboard</Text>
           <TouchableOpacity style={styles.exportBtn}>
@@ -101,7 +93,6 @@ export default function HomeScreen() {
           </TouchableOpacity>
         </View>
 
-        {/* Stats */}
         <View style={styles.statsRow}>
           <StatCard
             title="Total WECs"
@@ -132,48 +123,87 @@ export default function HomeScreen() {
             color="#A66DD4"
           />
         </View>
+{ /* ===== Line Chart (with value bubbles) ===== */}
+<ChartCard title="WEC Sales Trend">
+  <LineChart
+    data={lineData}
+    width={width - 40}
+    height={220}
+    chartConfig={{
+      ...chartConfig,
+      decimalPlaces: 0,
+      propsForDots: { r: "6", strokeWidth: "2", stroke: "#fff" }, 
+      backgroundGradientFromOpacity: 0,
+      backgroundGradientToOpacity: 0,
+    }}
+    bezier
+    style={styles.chartStyle}
+    fromZero={true}
+    renderDotContent={({ x, y, index, indexData }) => (
+      <View
+        key={index}
+        style={{
+          position: "absolute",
+          top: y - 28,
+          left: x - 15,
+          backgroundColor: "#4F86F7",
+          paddingHorizontal: 6,
+          paddingVertical: 2,
+          borderRadius: 4,
+        }}
+      >
+        <Text style={{ color: "#fff", fontSize: 10, fontWeight: "700" }}>{indexData}</Text>
+      </View>
+    )}
+  />
+</ChartCard>
 
-        {/* Charts */}
-        <ChartCard title="WEC Sales Trend">
-          <LineChart
-            data={lineData}
-            width={width - 40}
-            height={220}
-            chartConfig={chartConfig}
-            bezier
-            style={styles.chartStyle}
-          />
-        </ChartCard>
+/* ===== Bar Chart (values on top) ===== */
+<ChartCard title="Monthly Revenue">
+  <BarChart
+    data={barData}
+    width={width - 40}
+    height={220}
+    yAxisLabel="₹"
+    chartConfig={{
+      ...chartConfig,
+      decimalPlaces: 0,
+      barPercentage: 0.6,
+      color: (opacity = 1) => `rgba(79, 134, 247, ${opacity})`,
+    }}
+    style={styles.chartStyle}
+    fromZero={true}
+    showValuesOnTopOfBars={true}
+    withInnerLines={false}
+    flatColor={true}
+  />
+</ChartCard>
 
-        <ChartCard title="Monthly Revenue">
-          <BarChart
-            data={barData}
-            width={width - 40}
-            height={220}
-            yAxisLabel="₹"
-            chartConfig={chartConfig}
-            style={styles.chartStyle}
-          />
-        </ChartCard>
+/* ===== Pie Chart (percentages & legend) ===== */
+<ChartCard title="WEC Distribution by Product Category">
+  <PieChart
+    data={pieData.map((item) => {
+      const total = pieData.reduce((sum, i) => sum + i.population, 0);
+      return {
+        ...item,
+        legendFontColor: "#000",
+        legendFontSize: 12,
+        legendFontWeight: "700",
+        legendFontRight: 10,
+        percentage: ((item.population / total) * 100).toFixed(1) + "%",
+      };
+    })}
+    width={width - 40}
+    height={220}
+    chartConfig={chartConfig}
+    accessor="population"
+    backgroundColor="transparent"
+    paddingLeft="15"
+    absolute
+  />
+</ChartCard>
 
-        <ChartCard title="WEC Distribution by Product Category">
-          <PieChart
-            data={pieData.map((item) => ({
-              ...item,
-              legendFontColor: "#000",
-              legendFontSize: 13,
-            }))}
-            width={width - 40}
-            height={200}
-            chartConfig={chartConfig}
-            accessor="population"
-            backgroundColor="transparent"
-            paddingLeft="15"
-            absolute
-          />
-        </ChartCard>
 
-        {/* Recent Activity */}
         <View style={styles.activitySection}>
           <Text style={styles.chartTitle}>Recent Activity</Text>
           {recentActivity.map((item, i) => (
@@ -191,7 +221,7 @@ export default function HomeScreen() {
   );
 }
 
-/* ========== Reusable Components ========== */
+/* Reusable Components */
 const StatCard = ({ title, value, growth, icon, color }) => (
   <View style={styles.card}>
     <View style={[styles.iconBox, { backgroundColor: color + "20" }]}>
@@ -219,78 +249,25 @@ const chartConfig = {
   propsForDots: { r: "4", strokeWidth: "1", stroke: "#4F86F7" },
 };
 
-/* ========== Styles ========== */
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#F7F8FA" },
   loaderContainer: { flex: 1, justifyContent: "center", alignItems: "center" },
-
-  headerRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 10,
-  },
+  headerRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 10 },
   title: { fontSize: 22, fontWeight: "700" },
-  exportBtn: {
-    flexDirection: "row",
-    backgroundColor: "#4F86F7",
-    padding: 8,
-    borderRadius: 8,
-    alignItems: "center",
-  },
+  exportBtn: { flexDirection: "row", backgroundColor: "#4F86F7", padding: 8, borderRadius: 8, alignItems: "center" },
   exportText: { color: "#fff", marginLeft: 5, fontWeight: "600" },
-
-  divider: {
-    height: 1,
-    backgroundColor: "#E0E0E0",
-  },
-
-  statsRow: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    justifyContent: "space-between",
-  },
-  card: {
-    width: "48%",
-    backgroundColor: "#fff",
-    borderRadius: 10,
-    padding: 15,
-    marginVertical: 6,
-    shadowColor: "#000",
-    shadowOpacity: 0.05,
-    shadowRadius: 3,
-  },
-  iconBox: {
-    width: 40,
-    height: 40,
-    borderRadius: 10,
-    justifyContent: "center",
-    alignItems: "center",
-  },
+  divider: { height: 1, backgroundColor: "#E0E0E0" },
+  statsRow: { flexDirection: "row", flexWrap: "wrap", justifyContent: "space-between" },
+  card: { width: "48%", backgroundColor: "#fff", borderRadius: 10, padding: 15, marginVertical: 6, shadowColor: "#000", shadowOpacity: 0.05, shadowRadius: 3 },
+  iconBox: { width: 40, height: 40, borderRadius: 10, justifyContent: "center", alignItems: "center" },
   cardTitle: { color: "#555", marginTop: 8 },
   cardValue: { fontSize: 20, fontWeight: "700", marginTop: 4 },
   cardGrowth: { color: "#16a34a", fontSize: 12, marginTop: 4 },
-
-  chartContainer: {
-    backgroundColor: "#fff",
-    borderRadius: 10,
-    padding: 10,
-    marginVertical: 8,
-  },
+  chartContainer: { backgroundColor: "#fff", borderRadius: 10, padding: 10, marginVertical: 8 },
   chartTitle: { fontSize: 16, fontWeight: "600", marginBottom: 10 },
   chartStyle: { borderRadius: 8 },
-
-  activitySection: {
-    backgroundColor: "#fff",
-    borderRadius: 10,
-    padding: 10,
-    marginVertical: 10,
-  },
-  activityItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingVertical: 8,
-  },
+  activitySection: { backgroundColor: "#fff", borderRadius: 10, padding: 10, marginVertical: 10 },
+  activityItem: { flexDirection: "row", alignItems: "center", paddingVertical: 8 },
   activityText: { fontSize: 14, fontWeight: "500" },
   activityTime: { fontSize: 12, color: "#777" },
 });
