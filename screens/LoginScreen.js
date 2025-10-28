@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -9,26 +9,89 @@ import {
   Dimensions,
   Image,
   Modal,
+  ActivityIndicator,
+  Alert,
 } from "react-native";
 import Icon from "react-native-vector-icons/Ionicons";
 import { useNavigation } from "@react-navigation/native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { postData } from "../services/FetchNodeAdminServices";
 
 const { width } = Dimensions.get("window");
 
 export default function LoginScreen() {
   const navigation = useNavigation();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [email, setEmail] = useState("www@gmail.com");
+  const [password, setPassword] = useState("11111");
   const [showPassword, setShowPassword] = useState(false);
   const [forgotModalVisible, setForgotModalVisible] = useState(false);
   const [forgotEmail, setForgotEmail] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const handleLogin = () => {
-    alert(`Logging in with ${email}`);
+  // 🧠 Auto-login if already logged in
+  useEffect(() => {
+    const checkUser = async () => {
+      const user = await AsyncStorage.getItem("userData");
+      if (user) {
+        navigation.replace("MainTabs");
+      }
+    };
+    checkUser();
+  }, []);
+
+  // 🔐 Login function
+  const handleLogin = async () => {
+    if (!email || !password) {
+      Alert.alert("Error", "Please enter both email and password");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const body = { email: email, password: password };
+      console.log("📤 Sending:", body);
+
+      const response = await postData("api/admin/admin-login", body);
+      console.log("📥 Raw API response:", response);
+
+      if (!response) {
+        Alert.alert("Error", "No response from server — check network or backend.");
+        return;
+      }
+
+      if (response.status === true) {
+        Alert.alert("Success", "Login successful!");
+
+        try {
+          // 🧠 Store data & token
+          await AsyncStorage.setItem("userData", JSON.stringify(response.data));
+          if (response.token) {
+            await AsyncStorage.setItem("authToken", response.token);
+          }
+        } catch (e) {
+          console.error("⚠️ AsyncStorage save error:", e);
+        }
+
+        // ✅ Replace instead of navigate (no back to login)
+        navigation.replace("MainTabs");
+      } else {
+        Alert.alert("Login Failed", response.message || "Invalid credentials");
+      }
+    } catch (error) {
+      console.error("🚨 Login error:", error);
+      Alert.alert("Error", "Request failed. Please check console.");
+    } finally {
+      setLoading(false);
+    }
   };
 
+  // 🔄 Forgot password mock
   const handleForgotPassword = () => {
-    alert(`Password reset link sent to ${forgotEmail}`);
+    if (!forgotEmail) {
+      Alert.alert("Error", "Please enter your email");
+      return;
+    }
+    Alert.alert("Success", `Password reset link sent to ${forgotEmail}`);
     setForgotModalVisible(false);
     setForgotEmail("");
   };
@@ -39,11 +102,6 @@ export default function LoginScreen() {
       contentContainerStyle={{ justifyContent: "center", padding: 15 }}
       showsVerticalScrollIndicator={false}
     >
-      {/* Back Button */}
-      <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-        <Icon name="arrow-back-outline" size={24} color="#4F86F7" />
-      </TouchableOpacity>
-
       {/* Logo */}
       <View style={styles.logoContainer}>
         <Image
@@ -65,6 +123,7 @@ export default function LoginScreen() {
           onChangeText={setEmail}
           placeholder="Enter your email"
           keyboardType="email-address"
+          autoCapitalize="none"
         />
       </View>
 
@@ -87,14 +146,23 @@ export default function LoginScreen() {
             />
           </TouchableOpacity>
         </View>
+
         <TouchableOpacity onPress={() => setForgotModalVisible(true)}>
           <Text style={styles.forgotText}>Forgot Password?</Text>
         </TouchableOpacity>
       </View>
 
       {/* Login Button */}
-      <TouchableOpacity style={styles.button} onPress={handleLogin}>
-        <Text style={styles.buttonText}>Login</Text>
+      <TouchableOpacity
+        style={[styles.button, loading && { opacity: 0.7 }]}
+        onPress={handleLogin}
+        disabled={loading}
+      >
+        {loading ? (
+          <ActivityIndicator color="#fff" />
+        ) : (
+          <Text style={styles.buttonText}>Login</Text>
+        )}
       </TouchableOpacity>
 
       {/* Forgot Password Modal */}
@@ -114,7 +182,10 @@ export default function LoginScreen() {
               onChangeText={setForgotEmail}
               keyboardType="email-address"
             />
-            <TouchableOpacity style={modalStyles.modalButton} onPress={handleForgotPassword}>
+            <TouchableOpacity
+              style={modalStyles.modalButton}
+              onPress={handleForgotPassword}
+            >
               <Text style={modalStyles.modalButtonText}>Send Reset Link</Text>
             </TouchableOpacity>
             <TouchableOpacity
@@ -132,26 +203,18 @@ export default function LoginScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#F7F8FA" },
-
-  backButton: {
-    marginBottom: 15,
-  },
-
-  logoContainer: {
-    alignItems: "center",
+  logoContainer: { alignItems: "center", marginBottom: 8 },
+  logo: { width: width * 0.4, height: width * 0.4 },
+  title: {
+    fontSize: 24,
+    fontWeight: "700",
+    color: "#111",
     marginBottom: 8,
+    textAlign: "center",
   },
-  logo: {
-    width: width * 0.4,
-    height: width * 0.4,
-  },
-
-  title: { fontSize: 24, fontWeight: "700", color: "#111", marginBottom: 8, textAlign: "center" },
   subtitle: { fontSize: 14, color: "#555", marginBottom: 20, textAlign: "center" },
-
   inputGroup: { marginBottom: 15 },
   label: { fontWeight: "500", marginBottom: 4, color: "#555" },
-
   input: {
     backgroundColor: "#fff",
     paddingHorizontal: 12,
@@ -161,7 +224,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#ddd",
   },
-
   passwordWrapper: {
     flexDirection: "row",
     alignItems: "center",
@@ -171,19 +233,13 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     paddingHorizontal: 8,
   },
-  inputPassword: {
-    flex: 1,
-    paddingVertical: 10,
-    fontSize: 14,
-  },
-
+  inputPassword: { flex: 1, paddingVertical: 10, fontSize: 14 },
   forgotText: {
     color: "#4F86F7",
     fontSize: 12,
     marginTop: 4,
     textAlign: "right",
   },
-
   button: {
     backgroundColor: "#4F86F7",
     paddingVertical: 12,
@@ -194,7 +250,6 @@ const styles = StyleSheet.create({
   buttonText: { color: "#fff", fontWeight: "700", fontSize: 15 },
 });
 
-// Modal Styles
 const modalStyles = StyleSheet.create({
   modalOverlay: {
     flex: 1,

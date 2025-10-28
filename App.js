@@ -98,7 +98,7 @@ export default function App() {
     <SafeAreaProvider>
       <SafeAreaView style={{ flex: 1, backgroundColor: "#fff" }}>
         <NavigationContainer>
-          <Stack.Navigator screenOptions={{ headerShown: false }}>
+          <Stack.Navigator initialRouteName="LoginScreen" screenOptions={{ headerShown: false }}>
             <Stack.Screen name="MainTabs" component={TabNavigator} />
             <Stack.Screen name="CreateAmcScreen" component={CreateAmcScreen} />
             <Stack.Screen name="AMCDetail" component={AmcDetailScreen} />

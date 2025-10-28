@@ -357,4 +357,4 @@ const styles = StyleSheet.create({
   applyButton: { flex: 1, backgroundColor: "#2196F3", padding: 14, borderRadius: 10, alignItems: "center", marginLeft: 5 },
   resetButton: { flex: 1, backgroundColor: "#fff", padding: 14, borderRadius: 10, alignItems: "center", borderWidth: 1, borderColor: "#E53935", marginRight: 5 },
   cancelButton: { flex: 1, backgroundColor: "#E0E0E0", padding: 14, borderRadius: 10, alignItems: "center", marginHorizontal: 5 },
-});
+}); 
