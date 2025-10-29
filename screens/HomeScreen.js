@@ -13,51 +13,153 @@ import {
 import { LineChart, BarChart, PieChart } from "react-native-chart-kit";
 import Icon from "react-native-vector-icons/Ionicons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import Header from "../components/uicomponents/Header";
+import { getData } from "../services/FetchNodeAdminServices";
 
 const { width } = Dimensions.get("window");
 
 export default function HomeScreen() {
   const [loading, setLoading] = useState(true);
   const [dashboardData, setDashboardData] = useState(null);
+  const [user, setUser] = useState(null);
+
   const insets = useSafeAreaInsets();
 
-  const fetchDashboardData = async () => {
-    setLoading(true);
-    await new Promise((res) => setTimeout(res, 1000)); // Simulated API delay
+  const [amcs, setAmcs] = useState(0);
+  const [totaleActiveAcount, setTotaleActiveAcount] = useState(0);
+  const [totalExpiringThisMonth, setTotalExpiringThisMonth] = useState(0);
+  const [totalRevenue, setTotalRevenue] = useState(0);
+  const [totalDistributors, setTotalDistributors] = useState(0);
+  const [totalRetailers, setTotalRetailers] = useState(0);
+  const [salesData, setSalesData] = useState([]);
+  const [revenueData, setRevenueData] = useState([]);
+  const [productData, setProductData] = useState([]);
+  const [recentActivities, setRecentActivities] = useState([]);
 
-    const data = {
-      stats: { totalAMCs: 23, activeContracts: 19, today: 5, totalRevenue: 0.5 },
-      growth: { amcs: "+12%", contracts: "+8%", today: "+3%", revenue: "+15%" },
-      lineData: {
-        labels: ["Jan", "Feb", "Mar", "Apr", "May", "Jun"],
-        datasets: [{ data: [45, 52, 48, 61, 55, 67] }],
-      },
-      barData: {
-        labels: ["Jan", "Feb", "Mar", "Apr", "May", "Jun"],
-        datasets: [{ data: [180000, 210000, 195000, 250000, 220000, 270000] }],
-      },
-      pieData: [
-        { name: "AC", population: 35, color: "#4F86F7" },
-        { name: "Refrigerator", population: 25, color: "#1ABC9C" },
-        { name: "Mobile", population: 20, color: "#F5A623" },
-        { name: "Laptop", population: 12, color: "#FF6B6B" },
-        { name: "Others", population: 8, color: "#A66DD4" },
-      ],
-      recentActivity: [
-        { icon: "add-circle", text: "New WEC created for Samsung AC", time: "2 hours ago" },
-        { icon: "checkmark-done", text: "WEC renewal completed", time: "4 hours ago" },
-        { icon: "wallet", text: "Commission credited to wallet", time: "6 hours ago" },
-        { icon: "person-add", text: "New retailer registered", time: "1 day ago" },
-      ],
-    };
-    setDashboardData(data);
-    setLoading(false);
+  const formatAmount = (amount) => {
+    if (amount >= 100000) return `${(amount / 100000).toFixed(2)}L`;
+    if (amount >= 1000) return `${(amount / 1000).toFixed(2)}k`;
+    return amount.toString();
   };
 
   useEffect(() => {
-    fetchDashboardData();
+    const loadUserData = async () => {
+      try {
+        console.log("🟡 Loading user data from AsyncStorage...");
+        const storedUser = await AsyncStorage.getItem("userData");
+
+        if (storedUser) {
+          const parsed = JSON.parse(storedUser);
+          const userData = parsed?.user ? parsed.user : parsed;
+          setUser(userData);
+          console.log("✅ Loaded User Data:", userData);
+        } else {
+          console.log("⚠️ No user data found in AsyncStorage");
+          setLoading(false);
+        }
+      } catch (error) {
+        console.error("❌ Error loading user:", error);
+        setLoading(false);
+      }
+    };
+    loadUserData();
   }, []);
+
+  useEffect(() => {
+    if (user) {
+      console.log("🟢 Fetching dashboard data for user:", user.email || user.name);
+      fetchDashboardData();
+    }
+  }, [user]);
+
+  const fetchDashboardData = async () => {
+    try {
+      setLoading(true);
+
+      const queryJson = new URLSearchParams({
+        userId: user?.id?.toString() || "",
+        role: user?.role?.toString() || "",
+        createdByEmail: JSON.stringify({
+          email: user?.email?.toString() || "",
+          name: user?.name?.toString() || "",
+        }),
+      });
+
+      console.log("Dashboard API URL =>", `api/dashboard/get-all-amc-total?${queryJson}`);
+
+
+      const response = await getData(`api/dashboard/get-all-amc-total?${queryJson}`);
+
+
+      console.log("📊 Dashboard API Response:", JSON.stringify(response, null, 2));
+
+      const data = response?.data || response?.result || response;
+
+      if (!data) {
+        console.log("⚠️ No usable data found in API response");
+        setLoading(false);
+        return;
+      }
+      console.log("====>>>>>>>", data);
+      setDashboardData(data);
+
+      setAmcs(data.totalAmc || 0);
+      setTotaleActiveAcount(data.totalActiveAccount || 0);
+      setTotalExpiringThisMonth(data.totalExpiringThisMonth || 0);
+      setTotalRevenue(data.totalRevenue || 0);
+      setTotalDistributors(data.totalDistributors || 0);
+      setTotalRetailers(data.totalRetailers || 0);
+      // setSalesData(data.amcSalesData || 0)
+
+      // ✅ Sales Data for WEC Sales Trend
+      const formattedSalesData = data.amcSalesData
+        ? {
+          labels: data.amcSalesData.map((item) => item.month || "N/A"),
+          datasets: [
+            {
+              data: data.amcSalesData.map((item) => item.sales || 0),
+            },
+          ],
+        }
+        : { labels: [], datasets: [{ data: [] }] };
+
+      // ✅ Revenue Data for Monthly Revenue
+      const formattedRevenueData = data.amcRevenueData
+        ? {
+          labels: data.amcRevenueData.map((item) => item.month || item.label || "N/A"),
+          datasets: [
+            {
+              data: data.amcRevenueData.map((item) => item.revenue || item.value || 0),
+            },
+          ],
+        }
+        : formattedSalesData;
+
+      const formattedProductData = data.amcProductData
+        ? data.amcProductData.map((item, index) => ({
+          name: item.product || item.name || `Item ${index + 1}`,
+          population: item.count || item.value || 0,
+          color: ["#4F86F7", "#1ABC9C", "#F5A623", "#FF6B6B", "#A66DD4"][index % 5],
+          legendFontColor: "#000",
+          legendFontSize: 12,
+        }))
+        : [];
+
+      setSalesData(formattedSalesData);
+      setRevenueData(formattedRevenueData);
+      setProductData(formattedProductData);
+      setRecentActivities(data.amcRecentActivities || []);
+
+      // console.log("✅ Charts Ready:", { formattedSalesData, formattedRevenueData, formattedProductData });
+    } catch (error) {
+      console.error("❌ Error fetching dashboard:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+  console.log('Sales Data', salesData);
+
 
   if (loading || !dashboardData) {
     return (
@@ -68,15 +170,11 @@ export default function HomeScreen() {
     );
   }
 
-  const { stats, growth, lineData, barData, pieData, recentActivity } = dashboardData;
-
+  const growth = dashboardData?.growth || {};
+  console.log("SSSSSSSSSSSSSSS:==>", salesData)
   return (
     <View style={styles.container}>
-      <StatusBar
-        backgroundColor="#F7F8FA"
-        barStyle={Platform.OS === "ios" ? "dark-content" : "dark-content"}
-        translucent={false}
-      />
+      <StatusBar backgroundColor="#F7F8FA" barStyle="dark-content" />
 
       <View style={{ paddingTop: Platform.OS === "ios" ? insets.top : 0 }}>
         <Header />
@@ -93,143 +191,103 @@ export default function HomeScreen() {
           </TouchableOpacity>
         </View>
 
+        {/* ==== Stats Section ==== */}
         <View style={styles.statsRow}>
-          <StatCard
-            title="Total WECs"
-            value={stats.totalAMCs}
-            growth={growth.amcs}
-            icon="documents-outline"
-            color="#4F86F7"
-          />
-          <StatCard
-            title="Active Contracts"
-            value={stats.activeContracts}
-            growth={growth.contracts}
-            icon="checkmark-circle-outline"
-            color="#1ABC9C"
-          />
-          <StatCard
-            title="Today"
-            value={stats.today}
-            growth={growth.today}
-            icon="calendar-outline"
-            color="#F5A623"
-          />
-          <StatCard
-            title="Total Revenue"
-            value={`₹${stats.totalRevenue}L`}
-            growth={growth.revenue}
-            icon="cash-outline"
-            color="#A66DD4"
-          />
+          <StatCard title="Total WECs" value={amcs.toLocaleString()} icon="documents-outline" color="#4F86F7" />
+          <StatCard title="Active Contracts" value={totaleActiveAcount.toLocaleString()} icon="checkmark-circle-outline" color="#1ABC9C" />
+          <StatCard title="Expiring This Month" value={totalExpiringThisMonth.toLocaleString()} icon="calendar-outline" color="#F5A623" />
+          <StatCard title="Total Revenue" value={`₹${formatAmount(totalRevenue)}`} icon="cash-outline" color="#A66DD4" />
         </View>
-{ /* ===== Line Chart (with value bubbles) ===== */}
-<ChartCard title="WEC Sales Trend">
-  <LineChart
-    data={lineData}
-    width={width - 40}
-    height={220}
-    chartConfig={{
-      ...chartConfig,
-      decimalPlaces: 0,
-      propsForDots: { r: "6", strokeWidth: "2", stroke: "#fff" }, 
-      backgroundGradientFromOpacity: 0,
-      backgroundGradientToOpacity: 0,
-    }}
-    bezier
-    style={styles.chartStyle}
-    fromZero={true}
-    renderDotContent={({ x, y, index, indexData }) => (
-      <View
-        key={index}
-        style={{
-          position: "absolute",
-          top: y - 28,
-          left: x - 15,
-          backgroundColor: "#4F86F7",
-          paddingHorizontal: 6,
-          paddingVertical: 2,
-          borderRadius: 4,
-        }}
-      >
-        <Text style={{ color: "#fff", fontSize: 10, fontWeight: "700" }}>{indexData}</Text>
-      </View>
-    )}
-  />
-</ChartCard>
 
-/* ===== Bar Chart (values on top) ===== */
-<ChartCard title="Monthly Revenue">
-  <BarChart
-    data={barData}
-    width={width - 40}
-    height={220}
-    yAxisLabel="₹"
-    chartConfig={{
-      ...chartConfig,
-      decimalPlaces: 0,
-      barPercentage: 0.6,
-      color: (opacity = 1) => `rgba(79, 134, 247, ${opacity})`,
-    }}
-    style={styles.chartStyle}
-    fromZero={true}
-    showValuesOnTopOfBars={true}
-    withInnerLines={false}
-    flatColor={true}
-  />
-</ChartCard>
+        {/* ==== WEC Sales Trend ==== */}
+        <ChartCard title="WEC Sales Trend">
+          <LineChart
+            data={salesData}
+            width={width - 40}
+            height={220}
+            yAxisLabel="₹"
+            chartConfig={{
+              backgroundGradientFrom: "#fff",
+              backgroundGradientTo: "#fff",
+              color: (opacity = 1) => `rgba(59,130,246,${opacity})`,
+              labelColor: () => "#000",
+              propsForDots: {
+                r: "5",
+                strokeWidth: "2",
+                stroke: "#3B82F6",
+              },
+            }}
+            bezier
+            style={{ borderRadius: 10 }}
+            fromZero={true}
+          />
+        </ChartCard>
 
-/* ===== Pie Chart (percentages & legend) ===== */
-<ChartCard title="WEC Distribution by Product Category">
-  <PieChart
-    data={pieData.map((item) => {
-      const total = pieData.reduce((sum, i) => sum + i.population, 0);
-      return {
-        ...item,
-        legendFontColor: "#000",
-        legendFontSize: 12,
-        legendFontWeight: "700",
-        legendFontRight: 10,
-        percentage: ((item.population / total) * 100).toFixed(1) + "%",
-      };
-    })}
-    width={width - 40}
-    height={220}
-    chartConfig={chartConfig}
-    accessor="population"
-    backgroundColor="transparent"
-    paddingLeft="15"
-    absolute
-  />
-</ChartCard>
+        <ChartCard title="Monthly Revenue">
+          <BarChart
+            data={salesData}
+            width={width - 40}
+            height={220}
+            yAxisLabel="₹"
+            chartConfig={{
+              backgroundGradientFrom: "#fff",
+              backgroundGradientTo: "#fff",
+              color: (opacity = 1) => `rgba(16,185,129,${opacity})`,
+              labelColor: () => "#000",
+              barPercentage: 0.6,
+            }}
+            fromZero={true}
+            showValuesOnTopOfBars={true}
+            withInnerLines={false}
+            style={{ borderRadius: 10 }}
+          />
+        </ChartCard>
 
+        <ChartCard title="WEC Distribution by Product Category">
+          <PieChart
+            data={productData}
+            width={width - 40}
+            height={220}
+            chartConfig={chartConfig}
+            accessor="population"
+            backgroundColor="transparent"
+            paddingLeft="15"
+            absolute
+          />
+        </ChartCard>
 
-        <View style={styles.activitySection}>
-          <Text style={styles.chartTitle}>Recent Activity</Text>
-          {recentActivity.map((item, i) => (
-            <View key={i} style={styles.activityItem}>
-              <Icon name={item.icon} size={22} color="#4F86F7" />
-              <View style={{ flex: 1, marginLeft: 10 }}>
-                <Text style={styles.activityText}>{item.text}</Text>
-                <Text style={styles.activityTime}>{item.time}</Text>
-              </View>
-            </View>
-          ))}
+        {/* ==== Recent Activities ==== */}
+        <View style={styles.activityContainer}>
+          <Text style={styles.activityTitle}>Recent Activity</Text>
+          {recentActivities.length > 0 ? (
+            recentActivities.map((activity, index) => (
+              <TouchableOpacity key={index} style={styles.activityItem} activeOpacity={0.7}>
+                <View style={styles.iconCircle}>
+                  <Icon name={activity.icon || "time-outline"} size={22} color={activity.color || "#4F86F7"} />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.activityAction}>{activity.action}</Text>
+                  <Text style={styles.activityMeta}>{activity.user} • {activity.time}</Text>
+                </View>
+              </TouchableOpacity>
+            ))
+          ) : (
+            <Text style={styles.noActivity}>No recent activities found</Text>
+          )}
         </View>
       </ScrollView>
     </View>
   );
 }
 
-/* Reusable Components */
-const StatCard = ({ title, value, growth, icon, color }) => (
+/* --- Reusable Components --- */
+const StatCard = ({ title, value, icon, color }) => (
   <View style={styles.card}>
     <View style={[styles.iconBox, { backgroundColor: color + "20" }]}>
       <Icon name={icon} size={22} color={color} />
     </View>
     <Text style={styles.cardTitle}>{title}</Text>
     <Text style={styles.cardValue}>{value}</Text>
-    <Text style={styles.cardGrowth}>↑ {growth} from last month</Text>
   </View>
 );
 
@@ -262,12 +320,14 @@ const styles = StyleSheet.create({
   iconBox: { width: 40, height: 40, borderRadius: 10, justifyContent: "center", alignItems: "center" },
   cardTitle: { color: "#555", marginTop: 8 },
   cardValue: { fontSize: 20, fontWeight: "700", marginTop: 4 },
-  cardGrowth: { color: "#16a34a", fontSize: 12, marginTop: 4 },
   chartContainer: { backgroundColor: "#fff", borderRadius: 10, padding: 10, marginVertical: 8 },
   chartTitle: { fontSize: 16, fontWeight: "600", marginBottom: 10 },
   chartStyle: { borderRadius: 8 },
-  activitySection: { backgroundColor: "#fff", borderRadius: 10, padding: 10, marginVertical: 10 },
-  activityItem: { flexDirection: "row", alignItems: "center", paddingVertical: 8 },
-  activityText: { fontSize: 14, fontWeight: "500" },
-  activityTime: { fontSize: 12, color: "#777" },
+  activityContainer: { backgroundColor: "#fff", borderRadius: 12, padding: 16, marginVertical: 10, shadowColor: "#000", shadowOpacity: 0.05, shadowRadius: 4, elevation: 2, marginBottom: 100 },
+  activityTitle: { fontSize: 18, fontWeight: "600", color: "#111827", marginBottom: 12 },
+  activityItem: { flexDirection: "row", alignItems: "center", paddingVertical: 10, paddingHorizontal: 8 },
+  iconCircle: { width: 40, height: 40, borderRadius: 20, backgroundColor: "#F3F4F6", alignItems: "center", justifyContent: "center", marginRight: 12 },
+  activityAction: { fontSize: 14, fontWeight: "500", color: "#111827" },
+  activityMeta: { fontSize: 12, color: "#6B7280" },
+  noActivity: { fontSize: 14, color: "#6B7280", textAlign: "center", paddingVertical: 10 },
 });

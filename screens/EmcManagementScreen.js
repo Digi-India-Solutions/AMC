@@ -18,7 +18,11 @@ import Icon from "react-native-vector-icons/Ionicons";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 import Drawer from "../components/uicomponents/Drawer";
+
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import Header from "../components/uicomponents/Header";
+import { getData } from "../services/FetchNodeAdminServices";
+
 
 const { width, height } = Dimensions.get("window");
 
@@ -159,18 +163,7 @@ const AMCCard = ({ item, index }) => {
           >
             <Icon name="share-social-outline" size={22} color="#2563eb" />
           </Pressable>
-          {/* <Pressable
-            onPress={() => Alert.alert("Edit", `Editing ${item.id}`)}
-            style={({ pressed }) => [{ opacity: pressed ? 0.5 : 1, marginRight: 12 }]}
-          >
-            <Icon name="pencil-outline" size={22} color="#2563eb" />
-          </Pressable> */}
-          {/* <Pressable
-            onPress={() => Alert.alert("Options", `More options for ${item.id}`)}
-            style={({ pressed }) => [{ opacity: pressed ? 0.5 : 1 }]}
-          >
-            <Icon name="ellipsis-vertical" size={22} color="#555" />
-          </Pressable> */}
+
         </View>
       </View>
     </Animated.View>
@@ -198,6 +191,10 @@ const SummaryCard = ({ label, count, color, icon, index }) => {
 };
 
 export default function EmcManagementScreen() {
+
+  const [user, setUser] = useState(null);
+
+
   const navigation = useNavigation();
   const insets = useSafeAreaInsets();
   const [amcs, setAmcs] = useState([]);
@@ -217,17 +214,65 @@ export default function EmcManagementScreen() {
     load();
   }, []);
 
-  const openDrawer = () => {
-    setShowDrawer(true);
-    Animated.timing(slideAnim, { toValue: 0, duration: 300, useNativeDriver: true }).start();
-  };
-  const closeDrawer = () => {
-    Animated.timing(slideAnim, {
-      toValue: -width * 0.75,
-      duration: 250,
-      useNativeDriver: true,
-    }).start(() => setShowDrawer(false));
-  };
+
+  useEffect(() => {
+    const loadUserData = async () => {
+      try {
+        console.log("🟡 Loading user data from AsyncStorage...");
+        const storedUser = await AsyncStorage.getItem("userData");
+
+        if (storedUser) {
+          const parsed = JSON.parse(storedUser);
+          const userData = parsed?.user ? parsed.user : parsed;
+          setUser(userData);
+          console.log("✅ Loaded User Data:", userData);
+        } else {
+          console.log("⚠️ No user data found in AsyncStorage");
+          setLoading(false);
+        }
+      } catch (error) {
+        console.error("❌ Error loading user:", error);
+        setLoading(false);
+      }
+    };
+    loadUserData();
+  }, []);
+
+  const columns = [
+    { key: 'id', title: 'AMC ID', sortable: true },
+    { key: 'customerName', title: 'Customer', sortable: true },
+    { key: 'productCategory', title: 'Category' },
+    { key: 'productBrand', title: 'Brand' },
+    { key: 'productModel', title: 'Model' },
+    { key: 'amcAmount', title: 'AMC Amount', render: (value) => `₹${value.toLocaleString()}` },
+    { key: 'startDate', title: 'Start Date', render: (value) => new Date(value).toLocaleDateString('en-IN') },
+    { key: 'endDate', title: 'End Date', render: (value) => new Date(value).toLocaleDateString('en-IN') },
+    {
+      key: 'status', title: 'Status', render: (value) => {
+        const colors = {
+          active: 'bg-green-100 text-green-800',
+          expiring: 'bg-yellow-100 text-yellow-800',
+          expired: 'bg-red-100 text-red-800',
+          renewed: 'bg-blue-100 text-blue-800'
+        };
+        return (
+          <span className={`px-2 py-1 rounded-full text-xs font-medium ${colors[value] || 'bg-gray-100 text-gray-800'}`}>
+            {value.charAt(0).toUpperCase() + value.slice(1)}
+          </span>
+        );
+      }
+    }
+  ];
+
+  // Add retailer/distributor columns for admin
+  if (user?.role === 'admin') {
+    columns.splice(-1, 0,
+      { key: 'retailerName', title: 'Retailer' },
+      { key: 'distributorName', title: 'Distributor' }
+    );
+  } else if (user?.role === 'distributor') {
+    columns.splice(-1, 0, { key: 'retailerName', title: 'Retailer' });
+  }
 
   const categories = useMemo(() => ["All", ...new Set(amcs.map((a) => a.category))], [amcs]);
   const filtered = useMemo(
@@ -401,3 +446,4 @@ const styles = StyleSheet.create({
   drawerOverlay: { position: "absolute", top: 0, left: 0, width, height, backgroundColor: "rgba(0,0,0,0.3)", zIndex: 998 },
   drawer: { position: "absolute", top: 0, left: 0, width: width * 0.75, height, backgroundColor: "#fff", zIndex: 999, elevation: 10 },
 });
+ 
