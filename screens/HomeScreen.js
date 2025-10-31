@@ -46,16 +46,16 @@ export default function HomeScreen() {
   useEffect(() => {
     const loadUserData = async () => {
       try {
-        console.log("🟡 Loading user data from AsyncStorage...");
+        // console.log("🟡 Loading user data from AsyncStorage...");
         const storedUser = await AsyncStorage.getItem("userData");
 
         if (storedUser) {
           const parsed = JSON.parse(storedUser);
           const userData = parsed?.user ? parsed.user : parsed;
           setUser(userData);
-          console.log("✅ Loaded User Data:", userData);
+          // console.log("✅ Loaded User Data:", userData);
         } else {
-          console.log("⚠️ No user data found in AsyncStorage");
+          // console.log("⚠️ No user data found in AsyncStorage");
           setLoading(false);
         }
       } catch (error) {
@@ -68,7 +68,7 @@ export default function HomeScreen() {
 
   useEffect(() => {
     if (user) {
-      console.log("🟢 Fetching dashboard data for user:", user.email || user.name);
+      // console.log("🟢 Fetching dashboard data for user:", user.email || user.name);
       fetchDashboardData();
     }
   }, [user]);
@@ -86,22 +86,22 @@ export default function HomeScreen() {
         }),
       });
 
-      console.log("Dashboard API URL =>", `api/dashboard/get-all-amc-total?${queryJson}`);
+      // console.log("Dashboard API URL =>", `api/dashboard/get-all-amc-total?${queryJson}`);
 
 
       const response = await getData(`api/dashboard/get-all-amc-total?${queryJson}`);
 
 
-      console.log("📊 Dashboard API Response:", JSON.stringify(response, null, 2));
+      // console.log("📊 Dashboard API Response:", JSON.stringify(response, null, 2));
 
       const data = response?.data || response?.result || response;
 
       if (!data) {
-        console.log("⚠️ No usable data found in API response");
+        // console.log("⚠️ No usable data found in API response");
         setLoading(false);
         return;
       }
-      console.log("====>>>>>>>", data);
+      // console.log("====>>>>>>>", data);
       setDashboardData(data);
 
       setAmcs(data.totalAmc || 0);
@@ -158,7 +158,7 @@ export default function HomeScreen() {
       setLoading(false);
     }
   };
-  console.log('Sales Data', salesData);
+  // console.log('Sales Data', salesData);
 
 
   if (loading || !dashboardData) {
@@ -171,7 +171,7 @@ export default function HomeScreen() {
   }
 
   const growth = dashboardData?.growth || {};
-  console.log("SSSSSSSSSSSSSSS:==>", salesData)
+  // console.log("SSSSSSSSSSSSSSS:==>", salesData)
   return (
     <View style={styles.container}>
       <StatusBar backgroundColor="#F7F8FA" barStyle="dark-content" />

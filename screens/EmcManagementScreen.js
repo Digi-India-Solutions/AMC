@@ -18,86 +18,18 @@ import Icon from "react-native-vector-icons/Ionicons";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 import Drawer from "../components/uicomponents/Drawer";
-
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import Header from "../components/uicomponents/Header";
 import { getData } from "../services/FetchNodeAdminServices";
 
-
 const { width, height } = Dimensions.get("window");
-
-// Mock fetch
-const fetchAMCs = async () => {
-  await new Promise((r) => setTimeout(r, 500));
-  const data = [
-    {
-      id: "WEC001",
-      customer: "Rohit Rajput",
-      category: "AC",
-      brand: "Voltas",
-      model: "123V DZU",
-      amount: 2500,
-      startDate: "2024-01-15",
-      endDate: "2025-12-30" // Active
-    },
-    {
-      id: "WEC002",
-      customer: "Priya Sharma",
-      category: "Refrigerator",
-      brand: "LG",
-      model: "GL-T292RPZY",
-      amount: 2880,
-      startDate: "2023-10-01",
-      endDate: "2025-09-30" // Active
-    },
-    {
-      id: "WEC003",
-      customer: "Amit Verma",
-      category: "Laptop",
-      brand: "Dell",
-      model: "Inspiron 15",
-      amount: 4200,
-      startDate: "2022-01-01",
-      endDate: "2023-12-31" // Expired
-    },
-    {
-      id: "WEC004",
-      customer: "Sneha Gupta",
-      category: "Washing Machine",
-      brand: "Samsung",
-      model: "WA70A4002GS",
-      amount: 3100,
-      startDate: "2023-06-15",
-      endDate: "2025-11-01" // Active
-    },
-    {
-      id: "WEC005",
-      customer: "Vikram Mehta",
-      category: "Water Purifier",
-      brand: "Kent",
-      model: "Grand Plus",
-      amount: 1800,
-      startDate: "2022-04-01",
-      endDate: "2024-05-01"
-    }
-  ];
-
-  const today = new Date();
-  return data.map((item) => {
-    const end = new Date(item.endDate);
-    const daysLeft = Math.floor((end - today) / (1000 * 60 * 60 * 24));
-    let status = "Active";
-    if (daysLeft < 0) status = "Expired";
-    return { ...item, status, daysLeft };
-  });
-}
-
 
 const statusColor = (status) => {
   if (status === "Active") return "#16a34a";
   if (status === "Expired") return "#ef4444";
   return "#999";
 };
+
 const categoryColor = (category) => {
   switch (category) {
     case "AC": return "#E0F7FA";
@@ -106,7 +38,6 @@ const categoryColor = (category) => {
     default: return "#F5F5F5";
   }
 };
-
 
 const AMCCard = ({ item, index }) => {
   const anim = useRef(new Animated.Value(0)).current;
@@ -131,9 +62,9 @@ const AMCCard = ({ item, index }) => {
     >
       <View style={{ flex: 1 }}>
         <Text style={styles.cardTitle}>{item.id}</Text>
-        <Text style={styles.cardSub}>{item.customer}</Text>
+        <Text style={styles.cardSub}>{item.customerName}</Text>
         <Text style={styles.cardSubSmall}>
-          {item.category} | {item.brand} | {item.model}
+          {item.productCategory} | {item.productBrand} | {item.productModel}
         </Text>
 
         <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
@@ -142,11 +73,10 @@ const AMCCard = ({ item, index }) => {
         </View>
 
         <Text style={[styles.cardSubSmall, { marginTop: 2 }]}>
-          Amount: ₹{item.amount}
+          Amount: ₹{item.amcAmount}
         </Text>
       </View>
 
-      {/* Right icons */}
       <View style={{ alignItems: "flex-end" }}>
         <Text
           style={[
@@ -163,14 +93,12 @@ const AMCCard = ({ item, index }) => {
           >
             <Icon name="share-social-outline" size={22} color="#2563eb" />
           </Pressable>
-
         </View>
       </View>
     </Animated.View>
   );
 };
 
-// Summary Card
 const SummaryCard = ({ label, count, color, icon, index }) => {
   const anim = useRef(new Animated.Value(0)).current;
   useEffect(() => {
@@ -191,10 +119,7 @@ const SummaryCard = ({ label, count, color, icon, index }) => {
 };
 
 export default function EmcManagementScreen() {
-
   const [user, setUser] = useState(null);
-
-
   const navigation = useNavigation();
   const insets = useSafeAreaInsets();
   const [amcs, setAmcs] = useState([]);
@@ -206,81 +131,53 @@ export default function EmcManagementScreen() {
   const slideAnim = useRef(new Animated.Value(-width * 0.75)).current;
 
   useEffect(() => {
-    const load = async () => {
-      const data = await fetchAMCs();
-      setAmcs(data);
-      setLoading(false);
-    };
-    load();
-  }, []);
-
-
-  useEffect(() => {
-    const loadUserData = async () => {
+    const loadAmcData = async () => {
       try {
-        console.log("🟡 Loading user data from AsyncStorage...");
-        const storedUser = await AsyncStorage.getItem("userData");
+        setLoading(true);
 
-        if (storedUser) {
-          const parsed = JSON.parse(storedUser);
-          const userData = parsed?.user ? parsed.user : parsed;
-          setUser(userData);
-          console.log("✅ Loaded User Data:", userData);
+
+        const storedUser = await AsyncStorage.getItem("userData");
+        const parsed = storedUser ? JSON.parse(storedUser) : null;
+        const userData = parsed?.user ? parsed.user : parsed;
+        setUser(userData);
+
+
+        const response = await getData(`api/amcs/get-amc-by-retailer-with-pagination/${userData?._id}`);
+        console.log("🔵 AMC API Response =>", response);
+
+
+        if (response?.status && Array.isArray(response?.data)) {
+          const today = new Date();
+          const updatedData = response.data.map((item) => {
+            const end = new Date(item.endDate);
+            const daysLeft = Math.floor((end - today) / (1000 * 60 * 60 * 24));
+            let status = "Active";
+            if (daysLeft < 0) status = "Expired";
+            return { ...item, status, daysLeft };
+          });
+          setAmcs(updatedData);
         } else {
-          console.log("⚠️ No user data found in AsyncStorage");
-          setLoading(false);
+          setAmcs([]);
         }
+
       } catch (error) {
-        console.error("❌ Error loading user:", error);
+        console.error("❌ Error fetching AMC data:", error);
+        Alert.alert("Error", "Unable to fetch AMC data from server.");
+      } finally {
         setLoading(false);
       }
     };
-    loadUserData();
+
+    loadAmcData();
   }, []);
-
-  const columns = [
-    { key: 'id', title: 'AMC ID', sortable: true },
-    { key: 'customerName', title: 'Customer', sortable: true },
-    { key: 'productCategory', title: 'Category' },
-    { key: 'productBrand', title: 'Brand' },
-    { key: 'productModel', title: 'Model' },
-    { key: 'amcAmount', title: 'AMC Amount', render: (value) => `₹${value.toLocaleString()}` },
-    { key: 'startDate', title: 'Start Date', render: (value) => new Date(value).toLocaleDateString('en-IN') },
-    { key: 'endDate', title: 'End Date', render: (value) => new Date(value).toLocaleDateString('en-IN') },
-    {
-      key: 'status', title: 'Status', render: (value) => {
-        const colors = {
-          active: 'bg-green-100 text-green-800',
-          expiring: 'bg-yellow-100 text-yellow-800',
-          expired: 'bg-red-100 text-red-800',
-          renewed: 'bg-blue-100 text-blue-800'
-        };
-        return (
-          <span className={`px-2 py-1 rounded-full text-xs font-medium ${colors[value] || 'bg-gray-100 text-gray-800'}`}>
-            {value.charAt(0).toUpperCase() + value.slice(1)}
-          </span>
-        );
-      }
-    }
-  ];
-
-  // Add retailer/distributor columns for admin
-  if (user?.role === 'admin') {
-    columns.splice(-1, 0,
-      { key: 'retailerName', title: 'Retailer' },
-      { key: 'distributorName', title: 'Distributor' }
-    );
-  } else if (user?.role === 'distributor') {
-    columns.splice(-1, 0, { key: 'retailerName', title: 'Retailer' });
-  }
 
   const categories = useMemo(() => ["All", ...new Set(amcs.map((a) => a.category))], [amcs]);
   const filtered = useMemo(
     () =>
       amcs.filter((item) => {
         const matchQuery =
-          item.customer.toLowerCase().includes(query.toLowerCase()) ||
-          item.id.toLowerCase().includes(query.toLowerCase());
+          item.customer?.toLowerCase().includes(query.toLowerCase()) ||
+          item.id?.toLowerCase().includes(query.toLowerCase());
         const matchStatus = statusFilter === "All" || item.status === statusFilter;
         const matchCategory = categoryFilter === "All" || item.category === categoryFilter;
         return matchQuery && matchStatus && matchCategory;
@@ -306,28 +203,18 @@ export default function EmcManagementScreen() {
     );
 
   return (
-
     <View style={styles.container}>
-      {/* ✅ Status Bar */}
       <StatusBar
         backgroundColor="#F7F8FA"
         barStyle={Platform.OS === "ios" ? "dark-content" : "dark-content"}
         translucent={false}
       />
 
-      {/* ✅ Header (no extra top padding now) */}
       <View style={{ paddingTop: Platform.OS === "ios" ? insets.top : 0 }}>
         <Header />
       </View>
 
-      {/* ✅ Divider below header */}
       <View style={styles.divider} />
-
-
-      {/*  <SafeAreaView style={{ flex: 1, backgroundColor: "#f5f6fa" }}>
-       <StatusBar barStyle="dark-content" backgroundColor="#f5f6fa" />
-       <Header />
-       <View style={styles.divider} />*/}
 
       <ScrollView
         showsVerticalScrollIndicator={false}
@@ -342,14 +229,12 @@ export default function EmcManagementScreen() {
           </TouchableOpacity>
         </View>
 
-        {/* Summary Cards */}
         <View style={styles.summaryContainer}>
           <SummaryCard label="Total WECs" count={counts.total} color="#3b82f6" icon="documents-outline" index={0} />
           <SummaryCard label="Active" count={counts.active} color="#10b981" icon="checkmark-circle-outline" index={1} />
           <SummaryCard label="Expired" count={counts.expired} color="#ef4444" icon="close-circle-outline" index={2} />
         </View>
 
-        {/* Filters */}
         <View style={styles.filterSection}>
           <View style={styles.searchBox}>
             <Icon name="search-outline" size={18} color="#777" />
@@ -373,7 +258,7 @@ export default function EmcManagementScreen() {
             ))}
           </ScrollView>
 
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 10 }}>
+          {/* <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 10 }}>
             {categories.map((c) => (
               <TouchableOpacity
                 key={c}
@@ -383,45 +268,21 @@ export default function EmcManagementScreen() {
                 <Text style={{ color: categoryFilter === c ? "#fff" : "#333", fontWeight: "500" }}>{c}</Text>
               </TouchableOpacity>
             ))}
-          </ScrollView>
+          </ScrollView> */}
         </View>
 
-        {/* AMC Cards */}
         {filtered.length > 0 ? (
           filtered.map((item, i) => <AMCCard key={i} item={item} index={i} />)
         ) : (
           <Text style={styles.empty}>No WEC found</Text>
         )}
       </ScrollView>
-
-      {/* Drawer */}
-      {showDrawer && (
-        <>
-          <TouchableOpacity
-            style={styles.drawerOverlay}
-            activeOpacity={1}
-            onPress={closeDrawer}
-          />
-          <Animated.View
-            style={[styles.drawer, { transform: [{ translateX: slideAnim }] }]}
-          >
-            <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
-              <Drawer />
-            </ScrollView>
-          </Animated.View>
-        </>
-      )}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#f5f6fa" },
-  safeContainer: {
-    flex: 1,
-    backgroundColor: "#f5f6fa",
-
-  },
   center: { flex: 1, justifyContent: "center", alignItems: "center" },
   headerRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginVertical: 10 },
   title: { fontSize: 22, fontWeight: "700", color: "#111" },
@@ -443,7 +304,4 @@ const styles = StyleSheet.create({
   status: { borderWidth: 1, borderRadius: 6, paddingHorizontal: 8, paddingVertical: 2, fontSize: 12, fontWeight: "600" },
   empty: { textAlign: "center", marginVertical: 20, color: "#555", fontSize: 14 },
   divider: { height: 1, backgroundColor: "#E0E0E0" },
-  drawerOverlay: { position: "absolute", top: 0, left: 0, width, height, backgroundColor: "rgba(0,0,0,0.3)", zIndex: 998 },
-  drawer: { position: "absolute", top: 0, left: 0, width: width * 0.75, height, backgroundColor: "#fff", zIndex: 999, elevation: 10 },
 });
- 

@@ -1,4 +1,4 @@
-// 🟢 AllTransactions.js — Final Stable Version (2025)
+// 🟢 AllTransactions.js — Final Stable Version (with decimal & count fix)
 import React, { useState, useEffect, useRef } from "react";
 import {
   View,
@@ -79,17 +79,11 @@ export default function AllTransactions() {
       );
       console.log("🟢 Wallet API Response:", res);
 
-      // If server sent HTML instead of JSON (error page)
-      // if (typeof res === "string" && res.includes("<!DOCTYPE html>")) {
-      //   console.log("❌ Backend sent HTML error page (User not found)");
-      //   return;
-      // }
-
       const wallet = res?.data || res || {};
       if (res?.status || wallet?.totalBalance !== undefined) {
-        setTotalBalance(wallet.totalBalance || 0);
-        setTotalCredit(wallet.totalCredit || 0);
-        setTotalDebit(wallet.totalDebit || 0);
+        setTotalBalance(parseFloat(wallet.totalBalance || 0).toFixed(2));
+        setTotalCredit(parseFloat(wallet.totalCredit || 0).toFixed(2));
+        setTotalDebit(parseFloat(wallet.totalDebit || 0).toFixed(2));
       } else {
         console.log("⚠️ Wallet response structure unexpected:", res);
       }
@@ -146,7 +140,7 @@ export default function AllTransactions() {
   );
 
   // 🟢 Summary Card
-  const SummaryCard = ({ title, value, color, icon }) => (
+  const SummaryCard = ({ title, value, color, icon, showRupee = true }) => (
     <Animated.View
       style={[
         styles.card,
@@ -167,10 +161,12 @@ export default function AllTransactions() {
       <View style={styles.cardRow}>
         <View>
           <Text style={styles.cardTitle}>{title}</Text>
-          <Text style={[styles.cardValue, { color }]}>₹{value}</Text>
+          <Text style={[styles.cardValue, { color }]}>
+            {showRupee ? `₹${value}` : value}
+          </Text>
         </View>
         <View style={[styles.iconBox, { backgroundColor: color }]}>
-          <Icon name={icon} size={makeScale(20)} color="#fff" />
+          <Icon name={icon} size={makeScale(15)} color="#fff" />
         </View>
       </View>
     </Animated.View>
@@ -277,6 +273,7 @@ export default function AllTransactions() {
                 value={transactions.length}
                 color="#FFA000"
                 icon="receipt"
+                showRupee={false} // 🟢 No ₹ sign for count
               />
             </View>
 
@@ -355,7 +352,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   cardTitle: { fontSize: 13, color: "#666" },
-  cardValue: { fontSize: 20, fontWeight: "700" },
+  cardValue: { fontSize: 15, fontWeight: "700" },
   iconBox: { padding: 10, borderRadius: 10 },
   searchContainer: {
     flexDirection: "row",

@@ -133,47 +133,65 @@ export default function CreateAmcScreen() {
   };
 
   // -------------------- Upload Product Photos --------------------
-  const pickProductPhotos = () => {
-    Alert.alert("Upload Product Photos", "Choose source", [
-      {
-        text: "Camera",
-        onPress: () => {
-          launchCamera({ mediaType: "photo" }, (response) => {
-            if (!response.didCancel && response.assets?.length > 0) {
-              const file = response.assets[0];
-              const newFile = {
-                uri: file.uri,
-                type: file.type || "image/jpeg",
-                name: file.fileName || `product_${Date.now()}.jpg`,
-              };
-              setForm((prev) => ({
-                ...prev,
-                productPhotos: [...prev.productPhotos, newFile],
-              }));
-            }
-          });
-        },
-      },
-      {
-        text: "Gallery",
-        onPress: () => {
-          launchImageLibrary({ mediaType: "photo", selectionLimit: 5 }, (response) => {
-            if (!response.didCancel && response.assets?.length > 0) {
-              const files = response.assets.map((f) => ({
-                uri: f.uri,
-                type: f.type || "image/jpeg",
-                name: f.fileName || `product_${Date.now()}.jpg`,
-              }));
-              setForm((prev) => ({
-                ...prev,
-                productPhotos: [...prev.productPhotos, ...files],
-              }));
-            }
-          });
-        },
-      },
-      { text: "Cancel", style: "cancel" },
-    ]);
+  const pickProductPhotos = async () => {
+    // Alert.alert("Upload Product Photos", "Choose source", [
+    //   {
+    //     text: "Camera",
+    //     onPress: () => {
+    //       launchCamera({ mediaType: "photo" }, (response) => {
+    //         if (!response.didCancel && response.assets?.length > 0) {
+    //           const file = response.assets[0];
+    //           const newFile = {
+    //             uri: file.uri,
+    //             type: file.type || "image/jpeg",
+    //             name: file.fileName || `product_${Date.now()}.jpg`,
+    //           };
+    //           setForm((prev) => ({
+    //             ...prev,
+    //             productPhotos: [...prev.productPhotos, newFile],
+    //           }));
+    //         }
+    //       });
+    //     },
+    //   },
+    //   {
+    //     text: "Gallery",
+    //     onPress: () => {
+    //       launchImageLibrary({ mediaType: "photo", selectionLimit: 5 }, (response) => {
+    //         if (!response.didCancel && response.assets?.length > 0) {
+    //           const files = response.assets.map((f) => ({
+    //             uri: f.uri,
+    //             type: f.type || "image/jpeg",
+    //             name: f.fileName || `product_${Date.now()}.jpg`,
+    //           }));
+    //           setForm((prev) => ({
+    //             ...prev,
+    //             productPhotos: [...prev.productPhotos, ...files],
+    //           }));
+    //         }
+    //       });
+    //     },
+    //   },
+    //   { text: "Cancel", style: "cancel" },
+    // ]);
+    const result = await launchImageLibrary({
+      mediaType: 'photo',
+      quality: 0.8,
+    });
+
+    if (result.didCancel) return;
+
+    const file = result.assets[0];
+
+    const fileData = {
+      uri: file.uri,
+      name: file.fileName,
+      type: file.type,
+    }
+    setForm((prev) => ({
+      ...prev,
+      productPhotos: [...prev.productPhotos, fileData],
+    }));
   };
 
   // -------------------- GST Calculation --------------------
